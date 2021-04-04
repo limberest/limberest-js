@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- <img alt="Ply logo" src="./assets/logo.png" /> -->
-    <HelloWorld msg="Hello Vue 3.0 + Vite" />
+    <img alt="Ply logo" src="/img/logo.png" />
+    <HelloWorld msg="Hello Vue 3.0 in VS Code" />
   </div>
 </template>
 

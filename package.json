@@ -462,6 +462,16 @@
           }
         ],
         "priority": "default"
+      },
+      {
+        "viewType": "ply.request.file",
+        "displayName": "Ply Request File",
+        "selector": [
+          {
+            "filenamePattern": "*.ply.yaml"
+          }
+        ],
+        "priority": "default"
       }
     ]
   }

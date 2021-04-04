@@ -24,10 +24,10 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             enableScripts: true
         };
 
-        const mediaPath = path.join(this.context.extensionPath, 'media');
-        const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath)).toString();
+        const webPath = path.join(this.context.extensionPath, 'web');
+        const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(webPath)).toString();
 
-        const web = new Web(baseUri, path.join(mediaPath, 'flow.html'), webviewPanel.webview.cspSource);
+        const web = new Web(baseUri, path.join(webPath, 'request.html'), webviewPanel.webview.cspSource);
         webviewPanel.webview.html = web.html;
 
         const updateWebview = async () => {

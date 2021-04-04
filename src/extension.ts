@@ -13,6 +13,7 @@ import { FlowActionEvent, FlowEditor, FlowItemSelectEvent, FlowModeChangeEvent }
 import { Postman } from './postman';
 import { PlyItem } from './item';
 import { AdapterHelper } from './adapterHelper';
+import { RequestEditor } from './edit/request';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -55,6 +56,9 @@ export async function activate(context: vscode.ExtensionContext) {
         return _onFlowModeChange.on(listener);
     };
 
+    const requestEditor = new RequestEditor(context, new AdapterHelper('requests', testAdapters));
+    context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.request.file', requestEditor));
+
     const flowEditor = new FlowEditor(context, new AdapterHelper('flows', testAdapters), onFlowAction, onFlowItemSelect, onFlowModeChange);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
     context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
@@ -80,8 +84,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('ply.flow.mode.select', () => setFlowMode('select')));
     context.subscriptions.push(vscode.commands.registerCommand('ply.flow.mode.connect', () => setFlowMode('connect')));
     context.subscriptions.push(vscode.commands.registerCommand('ply.flow.mode.inspect', () => setFlowMode('runtime')));
-
-
 
     // register for ply-flow scheme (dummy provider to prevent test explorer from opening as text)
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ply-flow', {

@@ -5,11 +5,12 @@ import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import vue from 'rollup-plugin-vue';
+import replace from '@rollup/plugin-replace';
 
 export default {
     input: 'src/main.ts',
     output: {
-        file: 'dist/bundle.js',
+        file: 'out/bundle.js',
         format: 'es'
     },
     plugins: [
@@ -20,5 +21,8 @@ export default {
         postcss({
             extract: true
         }),
+        replace({
+            'process.env.NODE_ENV': JSON.stringify('production'),
+        })
     ]
 };
