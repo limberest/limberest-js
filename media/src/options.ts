@@ -9,7 +9,7 @@ export class Options {
     yaml = true;
     indent = 2;
 
-    get iconBase() { return `${this.base}/icons/${this.theme}`; }
+    get iconBase() { return `${this.base}/img/icons/${this.theme}`; }
 
     constructor(readonly base: string, readonly webSocketUrl: string) {}
 

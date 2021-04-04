@@ -3,28 +3,26 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as WebSocket from 'ws';
 import * as flowbee from 'flowbee';
-import { RunOptions } from 'ply-ct';
-import { PlyAdapter } from '../adapter';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
-import { Result } from '../result/result';
+import { AdapterHelper } from '../adapterHelper';
+import { Web } from './web';
 
-interface InstanceSubscribed { instanceId: string; }
 export interface FlowItemSelectEvent { uri: vscode.Uri; }
 export interface FlowActionEvent { uri: vscode.Uri; action: string; options?: any }
 export interface FlowModeChangeEvent { mode: flowbee.Mode }
+interface InstanceSubscribed { instanceId: string; }
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
-    private static html: string;
     private websocketPort: number;
     private websocketBound = false;
     private disposables: flowbee.Disposable[] = [];
     private subscribedEvent = new flowbee.TypedEvent<InstanceSubscribed>();
 
     constructor(
-        readonly context: vscode.ExtensionContext,
-        readonly adapters: Map<string,PlyAdapter>,
+        private context: vscode.ExtensionContext,
+        private adapterHelper: AdapterHelper,
         private onFlowAction: (listener: flowbee.Listener<FlowActionEvent>) => flowbee.Disposable,
         private onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable,
         private onFlowModeChange: (listener: flowbee.Listener<FlowModeChangeEvent>) => flowbee.Disposable
@@ -85,39 +83,13 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         this.bindWebsocket();
 
         const mediaPath = path.join(this.context.extensionPath, 'media');
+        const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath)).toString();
 
-        FlowEditor.html = '';
-        // TODO cache this
-        if (!FlowEditor.html) {
-            FlowEditor.html = fs.readFileSync(path.join(mediaPath, 'flow.html'), 'utf-8');
+        const web = new Web(baseUri, path.join(mediaPath, 'flow.html'), webviewPanel.webview.cspSource);
+        web.webSocketPort = this.websocketPort;
 
-            FlowEditor.html = FlowEditor.html.replace(/\${wsSource}/g, `ws://localhost:${this.websocketPort}`);
+        webviewPanel.webview.html = web.html;
 
-            // img
-            const img  = vscode.Uri.file(path.join(mediaPath, 'icons'));
-            const imgBase = webviewPanel.webview.asWebviewUri(img).toString();
-            FlowEditor.html = FlowEditor.html.replace(/\${imgBase}/g, imgBase);
-
-            // css
-            const flowCss = vscode.Uri.file(path.join(mediaPath, 'css', 'flow.css'));
-            const flowCssUri = webviewPanel.webview.asWebviewUri(flowCss).toString();
-            FlowEditor.html = FlowEditor.html.replace(/\${flowCssUri}/g, flowCssUri);
-            const flowbeeCss = vscode.Uri.file(path.join(mediaPath, 'css', 'flowbee.css'));
-            const flowbeeCssUri = webviewPanel.webview.asWebviewUri(flowbeeCss).toString();
-            FlowEditor.html = FlowEditor.html.replace(/\${flowbeeCssUri}/g, flowbeeCssUri);
-
-            // javascript
-            const js = vscode.Uri.file(path.join(mediaPath, 'out', 'bundle.js'));
-            const jsUri = webviewPanel.webview.asWebviewUri(js).toString();
-            FlowEditor.html = FlowEditor.html.replace(/\${jsUri}/g, jsUri);
-        }
-
-        // substitute the nonce and websocket port every time
-        let html = FlowEditor.html.replace(/\${cspSource}/g, webviewPanel.webview.cspSource);
-        html = html.replace(/\${nonce}/g, this.getNonce());
-        webviewPanel.webview.html = html;
-
-        const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
         const updateWebview = async (select?: string) => {
             const isFile = document.uri.scheme === 'file';
             const msg = {
@@ -149,7 +121,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     );
                     await vscode.workspace.applyEdit(edit);
                 }
-                this.removeActualResult(document.uri);
+                this.adapterHelper.removeActualResult(document.uri);
             } else if (message.type === 'alert' || message.type === 'confirm') {
                 const options: vscode.MessageOptions = {};
                 const items: string[] = [];
@@ -172,11 +144,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 });
             } else if (message.type === 'run' || message.type === 'debug') {
                 const debug = message.type === 'debug';
-                this.run(document.uri, message.target, message.values, message.options, debug);
+                this.adapterHelper.run(document.uri, message.target, message.values, message.options, debug);
             } else if (message.type === 'expected') {
-                this.expectedResult(document.uri, message.target);
+                this.adapterHelper.expectedResult(document.uri, message.target);
             } else if (message.type === 'compare') {
-                this.compareResults(document.uri, message.target);
+                this.adapterHelper.compareResults(document.uri, message.target);
             } else if (message.type === 'instance') {
                 const instance = this.getInstance(document.uri);
                 webviewPanel.webview.postMessage({ type: 'instance', instance });
@@ -206,11 +178,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             if (configChange.affectsConfiguration('ply.websocketPort')) {
                 const newPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);
                 if (newPort !== this.websocketPort) {
-                    html = html.replace(`ws://localhost:${this.websocketPort}`, `ws://localhost:${newPort}`);
+                    web.webSocketPort = newPort;
                     this.websocketPort = newPort;
                     this.websocketBound = false;
                     this.bindWebsocket();
-                    webviewPanel.webview.html = html;
+                    webviewPanel.webview.html = web.html;
                     updateWebview();
                 }
             }
@@ -219,7 +191,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         if (document.uri.scheme === 'file') {
             const awaitInstanceSubscribe = async () => {
                 const promise = new Promise<string>(resolve => {
-                    this.subscribedEvent.once(e =>  {
+                    this.subscribedEvent.once(e => {
                         resolve(e.instanceId);
                     });
                 });
@@ -227,7 +199,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             };
 
             const flowPath = document.uri.fsPath.replace(/\\/g, '/');
-            for (const adapter of this.adapters.values()) {
+            for (const adapter of this.adapterHelper.adapters.values()) {
                 let flowInstanceId: string | null = null;
                 const listener: flowbee.Listener<flowbee.FlowEvent> = async (flowEvent: flowbee.FlowEvent) => {
                     if (flowEvent.flowPath === flowPath) {
@@ -252,9 +224,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             }
 
             const onValuesUpdate = async (resultUri?: vscode.Uri) => {
-                const adapter = this.getAdapter(document.uri);
+                const adapter = this.adapterHelper.getAdapter(document.uri);
                 if (adapter?.values) {
-                    const suite = adapter.plyRoots.getSuite(this.getId(document.uri));
+                    const suite = adapter.plyRoots.getSuite(this.adapterHelper.getId(document.uri));
                     if (suite) {
                         const actualPath = suite.runtime.results.actual.toString();
                         if (!resultUri || actualPath === resultUri.fsPath.replace(/\\/g, '/')) {
@@ -262,7 +234,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 type: 'values',
                                 base: baseUri.toString(),
                                 flowPath: document.uri.fsPath,
-                                values: await adapter.values.getResultValues(this.getId(document.uri)),
+                                values: await adapter.values.getResultValues(this.adapterHelper.getId(document.uri)),
                                 storeVals: this.context.workspaceState.get('ply-user-values')
                             });
                         }
@@ -270,7 +242,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 }
             };
 
-            const adapter = this.getAdapter(document.uri);
+            const adapter = this.adapterHelper.getAdapter(document.uri);
             if (adapter.values) {
                 this.disposables.push(adapter.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
                 // initial values
@@ -278,7 +250,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     type: 'values',
                     base: baseUri.toString(),
                     flowPath: document.uri.fsPath,
-                    values: await adapter.values.getResultValues(this.getId(document.uri)),
+                    values: await adapter.values.getResultValues(this.adapterHelper.getId(document.uri)),
                     storeVals: this.context.workspaceState.get('ply-user-values')
                 });
             } else {
@@ -287,7 +259,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         type: 'values',
                         base: baseUri.toString(),
                         flowPath: document.uri.fsPath,
-                        values: await e.values.getResultValues(this.getId(document.uri)),
+                        values: await e.values.getResultValues(this.adapterHelper.getId(document.uri)),
                         storeVals: this.context.workspaceState.get('ply-user-values')
                     });
                     this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
@@ -295,7 +267,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             }
 
             this.disposables.push(this.onFlowAction(async flowAction => {
-                const flowUri = flowAction.uri.with( { fragment: '' } );
+                const flowUri = flowAction.uri.with({ fragment: '' });
                 if (flowUri.toString() === document.uri.toString()) {
                     webviewPanel.webview.postMessage({
                         type: 'action',
@@ -309,7 +281,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         }
 
         this.disposables.push(this.onFlowItemSelect(flowItemSelect => {
-            if (flowItemSelect.uri.with({fragment: ''}).toString() === document.uri.toString()) {
+            if (flowItemSelect.uri.with({ fragment: '' }).toString() === document.uri.toString()) {
                 updateWebview(flowItemSelect.uri.fragment);
             }
         }));
@@ -336,25 +308,16 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         updateWebview();
     }
 
-    getNonce(): string {
-        let nonce = '';
-        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 32; i++) {
-            nonce += possible.charAt(Math.floor(Math.random() * possible.length));
+    getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {
+        // instance from results
+        const adapter = this.adapterHelper.getAdapter(uri);
+        const id = `flows|${uri.toString(true)}`;
+        const suite = adapter.plyRoots.getSuite(id);
+        if (suite) {
+            return suite.runtime.results.flowInstanceFromActual(uri.fsPath);
+        } else {
+            throw new Error(`Flow not found: ${id}`);
         }
-        return nonce;
-    }
-
-    getAdapter(uri: vscode.Uri): PlyAdapter {
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-        if (!workspaceFolder) {
-            throw new Error(`Workspace folder not found for flow path: ${uri}`);
-        }
-        const adapter = this.adapters.get(workspaceFolder.uri.toString());
-        if (!adapter) {
-            throw new Error(`No test adapter found for workspace folder: ${workspaceFolder.uri}`);
-        }
-        return adapter;
     }
 
     async promptToRunForInstance(uri: vscode.Uri) {
@@ -365,76 +328,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             { placeHolder: 'No results to inspect' }
         );
         if (res === runFlow) {
-            this.run(uri);
+            this.adapterHelper.run(uri);
         }
-    }
-
-    async run(uri: vscode.Uri, target?: string, values: object = {}, runOptions?: RunOptions, debug = false) {
-        try {
-            const id = this.getId(uri, target);
-            console.debug(`run: ${id}`);
-            const adapter = this.getAdapter(uri);
-            await adapter?.run([id], values, { ...runOptions, proceed: true });
-        } catch (err) {
-            console.error(err);
-            vscode.window.showErrorMessage(err.message);
-        }
-    }
-
-    expectedResult(uri: vscode.Uri, target?: string) {
-        const id = this.getId(uri, target);
-        console.debug(`expected: ${id}`);
-        const adapter = this.getAdapter(uri);
-        const suite = adapter?.plyRoots.getSuite(id);
-        if (suite) {
-            let fileUri = vscode.Uri.file(suite.runtime.results.expected.toString());
-            if (target) {
-                fileUri = fileUri.with({fragment: target});
-            }
-            const expectedUri = Result.fromUri(fileUri).toUri().with({query: 'type=flow'});
-            vscode.commands.executeCommand('ply.openResult', expectedUri);
-        } else {
-            vscode.window.showErrorMessage(`Suite not found for: ${id}`);
-        }
-    }
-
-    compareResults(uri: vscode.Uri, target?: string) {
-        const id = this.getId(uri, target);
-        console.debug(`compare: ${id}`);
-        vscode.commands.executeCommand('ply.diff', id);
-    }
-
-    async removeActualResult(uri: vscode.Uri) {
-        const id = this.getId(uri);
-        const adapter = this.getAdapter(uri);
-        const suite = adapter?.plyRoots.getSuite(id);
-        if (suite) {
-            const actual = suite.runtime.results.actual.toString();
-            if (fs.existsSync(actual)) {
-                fs.promises.unlink(actual);
-            }
-        }
-    }
-
-    getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {
-        // instance from results
-        const adapter = this.getAdapter(uri);
-        const id = `flows|${uri.toString(true)}`;
-        const suite = adapter.plyRoots.getSuite(id);
-        if (suite) {
-            return suite.runtime.results.flowInstanceFromActual(uri.fsPath);
-        } else {
-            throw new Error(`Flow not found: ${id}`);
-        }
-    }
-
-    private getId(uri: vscode.Uri, target?: string): string {
-        let id = uri.toString(true);
-        if (target) {
-            id += `#${target}`;
-        } else {
-            id = `flows|${id}`;
-        }
-        return id;
     }
 }

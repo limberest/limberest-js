@@ -384,7 +384,7 @@ window.addEventListener('message', async (event) => {
         }
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
-        values = new Values(`${message.flowPath}`, `${message.base}/icons/${theme}`, message.values, message.storeVals);
+        values = new Values(`${message.flowPath}`, `${message.base}/img/icons/${theme}`, message.values, message.storeVals);
         updateState({ values: message.values, storeVals: message.storeVals });
     } else if (message.type === 'action') {
         readState()?.onFlowAction({ action: message.action, target: message.target, options: message.options });
