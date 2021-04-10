@@ -4,9 +4,10 @@
   "scripts": {
     "build": "rollup -c && npm run css",
     "watch": "rollup --watch -c",
-    "css": "node-sass src/css/style.scss -o out/css"
+    "css": "node-sass css/style.scss -o out"
   },
   "dependencies": {
+    "element-plus": "latest",
     "vue": "^3.0.4"
   },
   "devDependencies": {

@@ -19,16 +19,16 @@ export class Web {
         // cache this
         if (!html) {
             html = fs.readFileSync(this.template, 'utf-8');
-
-            // webBase
-            html = html.replace(/\${webBase}/g, this.baseUri);
             Web.htmls.set(this.template, html);
         }
 
-        // substitute the nonce and websocket port every time
+        // webBase
+        html = html.replace(/\${webBase}/g, this.baseUri);
+        // webSocket
         if (this.webSocketPort) {
             html = html.replace(/\${wsSource}/g, `ws://localhost:${this.webSocketPort}`);
         }
+        // csp source and nonce
         html = html.replace(/\${cspSource}/g, this.cspSource);
         html = html.replace(/\${nonce}/g, this.getNonce());
 

@@ -1,19 +1,16 @@
 <template>
   <div>
-    <Image src="/img/logo.png" alt="Ply logo" />
-    <HelloWorld msg="Hello Vue 3.0 in VS Code" />
+    <request />
   </div>
 </template>
 
 <script>
-import Image from './components/Image.vue'
-import HelloWorld from './components/HelloWorld.vue'
+import Request from './components/Request.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld,
-    Image
+    Request
   }
 }
 </script>

@@ -6,3 +6,10 @@
   color: #2c3e50;
   margin-top: 60px;
 }
+.el-icon-arrow-up:before {
+  content: "^";
+  font-size: 14px;
+  font-family: Verdana, sans-serif;
+  position: relative;
+  top: 2px;
+}
