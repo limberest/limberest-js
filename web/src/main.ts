@@ -27,7 +27,5 @@ window.addEventListener('message', async (event) => {
     }
 });
 
-console.log("GLOB REQ ST: " + JSON.stringify(requestState));
-
 createApp(App).use(ElementPlus).mount('#app');
 

@@ -1,16 +1,25 @@
+pre {
+  margin: 0;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
 }
-.el-icon-arrow-up:before {
-  content: "^";
+
+.request-name {
+  margin-top: 5px;
   font-size: 14px;
-  font-family: Verdana, sans-serif;
-  position: relative;
-  top: 2px;
-  bottom: 0;
+  font-weight: bold;
+}
+
+.el-input__inner {
+  height: 30px;
+  line-height: 30px;
+  padding-left: 7px;
+  padding-right: 0;
+}
+.el-input__suffix {
+  top: -5px;
 }

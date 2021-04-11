@@ -3,10 +3,12 @@
   "version": "0.0.1",
   "scripts": {
     "build": "rollup -c",
-    "watch": "rollup --watch -c"
+    "watch": "rollup --watch -c",
+    "fonts": "cp -R fonts out"
   },
   "dependencies": {
     "element-plus": "latest",
+    "highlight.js": "^10.7.2",
     "vue": "^3.0.4"
   },
   "devDependencies": {

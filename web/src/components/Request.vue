@@ -1,8 +1,11 @@
 <template>
   <div>
+    <div class="request-name">Create Movie</div>
     <endpoint />
-    <el-tabs tab-position="left" style="height: 200px;">
-      <el-tab-pane label="Body">User</el-tab-pane>
+    <el-tabs tab-position="left">
+      <el-tab-pane label="Body">
+        <body-content></body-content>
+      </el-tab-pane>
       <el-tab-pane label="Query">Config</el-tab-pane>
       <el-tab-pane label="Headers">Role</el-tab-pane>
       <el-tab-pane label="Source">Task</el-tab-pane>
@@ -13,9 +16,10 @@
 <script>
 import { requestState } from '../rstate'
 import Endpoint from './Endpoint.vue'
+import BodyContent from './BodyContent.vue'
 
 export default {
-  components: { Endpoint },
+  components: { Endpoint, BodyContent },
   name: 'request',
   props: {
   }

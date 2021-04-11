@@ -468,7 +468,7 @@
         "displayName": "Ply Request File",
         "selector": [
           {
-            "filenamePattern": "*.ply.yaml"
+            "filenamePattern": "*.ply"
           }
         ],
         "priority": "default"
