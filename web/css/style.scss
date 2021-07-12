@@ -19,7 +19,13 @@ pre {
   line-height: 30px;
   padding-left: 7px;
   padding-right: 0;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
 }
 .el-input__suffix {
   top: -5px;
+}
+
+.el-tabs__item {
+  color: var(--vscode-tab-inactiveForeground);
 }
