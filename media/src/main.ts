@@ -144,9 +144,9 @@ export class Flow implements flowbee.Disposable {
             });
             this.switchMode('select');
 
-            this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
+            this.flowActions = new FlowActions(this.options.iconBase, document.getElementById('flow-actions') as HTMLDivElement);
             const handleFlowAction = (e: FlowActionEvent) => {
-                if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
+                if (e.action === 'submit' || e.action === 'run' || e.action === 'debug' || e.action === 'stop') {
                     this.closeConfigurator();
                     if (!e.target) {
                         this.flowDiagram.render(this.options.diagramOptions);
@@ -233,6 +233,7 @@ export class Flow implements flowbee.Disposable {
                 this.flowDiagram.readonly = this.readonly;
                 this.flowActions?.enableCompare(false);
                 updateState({ mode: drawingOption });
+                this.flowDiagram.focus();
             } else if (drawingOption === 'runtime') {
                 this.closeConfigurator();
                 vscode.postMessage({
@@ -271,17 +272,22 @@ export class Flow implements flowbee.Disposable {
                 }
             }
         }
-        let vals: object | undefined;
+        let vals: object | 'Files' | undefined;
         if (flowAction === 'run' || flowAction === 'values') {
             this.closeConfigurator();
-            if (values) {
+            if (values && (flowAction === 'values' || !values.isRows)) {
                 const action = e.options?.submit ? 'Submit' : 'Run';
                 const onlyIfNeeded = !step && e.action !== 'values';
                 const storageCall = async (key: string, storeVals?: { [key: string]: string }) => {
+                    values.storeVals[key] = storeVals;
+                    updateState({ storeVals });
                     vscode.postMessage({ type: 'values', key, storeVals });
                 };
                 vals = await values.prompt(step || this.flowDiagram.flow, action, onlyIfNeeded, storageCall);
-                if (!vals) {
+                if (vals === 'Files') {
+                    vscode.postMessage({ type: 'valuesFiles' });
+                    return;
+                } else if (!vals) {
                     return; // canceled or just saved
                 }
             } else if (flowAction === 'values') {
@@ -373,6 +379,7 @@ window.addEventListener('message', async (event) => {
         if (flow) {
             flow.flowDiagram.instance = message.instance;
             const hasInstance = !!flow.flowDiagram.instance;
+            flow.flowActions?.setRunning(hasInstance && message.event === 'start');
             if (hasInstance) {
                 flow.flowDiagram.readonly = true;
                 flow.switchMode('runtime');
@@ -384,8 +391,8 @@ window.addEventListener('message', async (event) => {
         }
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
-        values = new Values(`${message.flowPath}`, `${message.base}/img/icons/${theme}`, message.values, message.storeVals);
-        updateState({ values: message.values, storeVals: message.storeVals });
+        values = new Values(`${message.flowPath}`, `${message.base}/img/icons/${theme}`, message.files, message.values, message.storeVals);
+        updateState({ valuesFiles: message.files, values: message.values, storeVals: message.storeVals });
     } else if (message.type === 'action') {
         readState()?.onFlowAction({ action: message.action, target: message.target, options: message.options });
     } else if (message.type === 'mode') {
@@ -418,6 +425,7 @@ interface FlowState {
         open: boolean;
         position?: { left: number, top: number, width: number, height: number };
     }
+    valuesFiles?: string[];
     values?: object;
     storeVals?: any;
 }
@@ -455,7 +463,7 @@ function readState(loadInstance = true): Flow | undefined {
             }
         }
         if (state.values) {
-            values = new Values(state.file, flow.options.iconBase, state.values, state.storeVals);
+            values = new Values(state.file, flow.options.iconBase, state.valuesFiles, state.values, state.storeVals);
         }
         return flow;
     }

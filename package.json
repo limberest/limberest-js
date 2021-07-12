@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "2.1.0-beta.2",
+  "version": "2.1.0-beta.4",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -52,36 +52,37 @@
     "package": "vsce package"
   },
   "engines": {
-    "vscode": "^1.50.0"
+    "vscode": "^1.56.0"
   },
   "dependencies": {
-    "flowbee": "^0.2.8",
-    "ply-ct": "^3.0.0-beta.1",
+    "find-up": "^4.1.0",
+    "flowbee": "^0.2.10",
+    "ply-ct": "^3.0.7-beta.2",
     "vscode-test-adapter-api": "^1.9.0",
     "vscode-test-adapter-util": "^0.7.1",
     "vscode-uri": "^2.1.2",
     "ws": "^7.4.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^15.1.0",
+    "@rollup/plugin-commonjs": "^19.0.0",
     "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "@types/chai": "^4.2.14",
-    "@types/mocha": "^8.0.3",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@types/chai": "^4.2.18",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^13.7.4",
-    "@types/resize-observer-browser": "^0.1.4",
-    "@types/vscode": "^1.50.0",
-    "@types/ws": "^7.4.0",
-    "@typescript-eslint/eslint-plugin": "^4.3.0",
-    "@typescript-eslint/parser": "^4.3.0",
-    "chai": "^4.2.0",
-    "eslint": "^7.10.0",
+    "@types/resize-observer-browser": "^0.1.5",
+    "@types/vscode": "^1.56.0",
+    "@types/ws": "^7.4.4",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "^4.25.0",
+    "chai": "^4.3.4",
+    "eslint": "^7.27.0",
     "esm": "^3.2.25",
-    "mocha": "^8.1.3",
-    "rollup": "^2.28.2",
-    "rollup-plugin-typescript2": "^0.27.3",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.1.2"
+    "mocha": "^8.4.0",
+    "rollup": "^2.53.1",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
   },
   "extensionDependencies": [
     "hbenl.vscode-test-explorer"
@@ -142,11 +143,6 @@
           "type": "boolean",
           "description": "Write detailed vscode-ply output to the Ply Invoker output panel.",
           "default": false,
-          "scope": "resource"
-        },
-        "ply.valuesFiles": {
-          "type": "array",
-          "description": "JSON files containing Ply values.",
           "scope": "resource"
         },
         "ply.debugPort": {
@@ -370,7 +366,17 @@
         {
           "command": "ply.submit-item",
           "group": "inline@0",
+          "when": "view == test-explorer && viewItem == suite"
+        },
+        {
+          "command": "ply.submit-item",
+          "group": "inline@0",
           "when": "view == test-explorer && viewItem == test"
+        },
+        {
+          "command": "ply.submit-item",
+          "group": "inline@0",
+          "when": "view == test-explorer && viewItem == suiteWithSource"
         },
         {
           "command": "ply.submit-item",
@@ -380,7 +386,17 @@
         {
           "command": "ply.submit-item",
           "group": "inline@0",
+          "when": "view == test-explorer && viewItem == debuggableSuite"
+        },
+        {
+          "command": "ply.submit-item",
+          "group": "inline@0",
           "when": "view == test-explorer && viewItem == debuggableTest"
+        },
+        {
+          "command": "ply.submit-item",
+          "group": "inline@0",
+          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
         },
         {
           "command": "ply.submit-item",

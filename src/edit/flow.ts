@@ -1,8 +1,11 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as vscode from 'vscode';
+import * as findUp from 'find-up';
 import * as WebSocket from 'ws';
 import * as flowbee from 'flowbee';
+import { PLY_CONFIGS } from 'ply-ct';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { AdapterHelper } from '../adapterHelper';
@@ -28,6 +31,27 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         private onFlowModeChange: (listener: flowbee.Listener<FlowModeChangeEvent>) => flowbee.Disposable
     ) {
         this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);
+        // clear obsolete stored values
+        const storedVals = this.context.workspaceState.get('ply-user-values') || {} as any;
+        if (storedVals) {
+            let update = false;
+            for (const testPath of Object.keys(storedVals)) {
+                let file = testPath;
+                const hash = file.lastIndexOf('#');
+                if (hash !== -1) {
+                    file = testPath.substring(0, hash);
+                } else if (file.endsWith('.values')) {
+                    file = file.substring(0, file.length - 7);
+                }
+                if (!fs.existsSync(file)) {
+                    delete storedVals[testPath];
+                    update = true;
+                }
+            }
+            if (update) {
+                this.context.workspaceState.update('ply-user-values', storedVals);
+            }
+        }
     }
 
     private bindWebsocket() {
@@ -145,6 +169,14 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             } else if (message.type === 'run' || message.type === 'debug') {
                 const debug = message.type === 'debug';
                 this.adapterHelper.run(document.uri, message.target, message.values, message.options, debug);
+            } else if (message.type === 'stop') {
+                this.adapterHelper.getAdapter(document.uri)?.cancel();
+                let instance;
+                try {
+                    instance = this.getInstance(document.uri);
+                } finally {
+                    webviewPanel.webview.postMessage({ type: 'instance', instance, event: 'stop' });
+                }
             } else if (message.type === 'expected') {
                 this.adapterHelper.expectedResult(document.uri, message.target);
             } else if (message.type === 'compare') {
@@ -159,13 +191,55 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 await vscode.commands.executeCommand("workbench.action.closePanel");
             } else if (message.type === 'values') {
                 // store values
-                const plyValues = this.context.workspaceState.get('ply-user-values') || {} as any;
+                const storedVals = this.context.workspaceState.get('ply-user-values') || {} as any;
                 if (message.storeVals) {
-                    plyValues[message.key] = message.storeVals;
+                    storedVals[message.key] = message.storeVals;
                 } else {
-                    delete plyValues[message.key];
+                    delete storedVals[message.key];
                 }
-                this.context.workspaceState.update('ply-user-values', plyValues);
+                this.context.workspaceState.update('ply-user-values', storedVals);
+            } else if (message.type === 'valuesFiles') {
+                let configPath = findUp.sync(
+                    PLY_CONFIGS,
+                    { cwd: path.dirname(document.fileName) }
+                );
+
+                if (!configPath) {
+                    const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+                    if (!workspaceFolder) {
+                        throw new Error(`No workspace folder: ${document.uri}`);
+                    }
+                    configPath = vscode.Uri.parse(`${workspaceFolder.uri}/plyconfig.json`).fsPath;
+                    fs.writeFileSync(configPath, `{${os.EOL}\t"valuesFiles": [${os.EOL}\t]${os.EOL}}`, { encoding: 'utf-8' });
+                }
+
+                const configDoc = await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
+                await vscode.window.showTextDocument(configDoc);
+                const lines = configDoc.getText().split(/\r?\n/);
+                const lineNumber = lines.findIndex(line => line.indexOf('valuesFiles') !== -1);
+                if (lineNumber >= 0) {
+                    await vscode.commands.executeCommand('revealLine', { lineNumber, at: 'top' });
+                } else {
+                    const edit = new vscode.WorkspaceEdit();
+                    const lastClosingBrace = lines.reduce((lcb, line, i) => {
+                        if (line.trimEnd().endsWith('}')) {
+                            return i;
+                        } else {
+                            return lcb;
+                        }
+                    }, -1);
+                    if (lastClosingBrace !== -1) {
+                        const insLine = lastClosingBrace > 0 ? lastClosingBrace - 1 : 0;
+                        edit.insert(
+                            configDoc.uri,
+                            new vscode.Position(insLine, lines[insLine].length),
+                            `,${os.EOL}\t"valuesFiles": [${os.EOL}\t]${os.EOL}`
+                        );
+                        await vscode.workspace.applyEdit(edit);
+
+                        await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
+                    }
+                }
             }
         }));
 
@@ -203,12 +277,16 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 let flowInstanceId: string | null = null;
                 const listener: flowbee.Listener<flowbee.FlowEvent> = async (flowEvent: flowbee.FlowEvent) => {
                     if (flowEvent.flowPath === flowPath) {
-                        if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
-                            flowInstanceId = null;
+                        if (flowEvent.elementType === 'flow'
+                            && (flowEvent.eventType === 'start' || flowEvent.eventType === 'finish' || flowEvent.eventType === 'error')) {
+                            if (flowEvent.eventType === 'start') {
+                                flowInstanceId = null;
+                            }
                             // set the diagram instance so it'll start listening for websocket updates
                             webviewPanel.webview.postMessage({
                                 type: 'instance',
-                                instance: flowEvent.instance as flowbee.FlowInstance
+                                instance: flowEvent.instance as flowbee.FlowInstance,
+                                event: flowEvent.eventType
                             });
                         } else {
                             if (!flowInstanceId) {
@@ -235,7 +313,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 base: baseUri.toString(),
                                 flowPath: document.uri.fsPath,
                                 values: await adapter.values.getResultValues(this.adapterHelper.getId(document.uri)),
-                                storeVals: this.context.workspaceState.get('ply-user-values')
+                                storeVals: this.context.workspaceState.get('ply-user-values'),
+                                files: adapter.values.files
                             });
                         }
                     }
@@ -251,7 +330,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     base: baseUri.toString(),
                     flowPath: document.uri.fsPath,
                     values: await adapter.values.getResultValues(this.adapterHelper.getId(document.uri)),
-                    storeVals: this.context.workspaceState.get('ply-user-values')
+                    storeVals: this.context.workspaceState.get('ply-user-values'),
+                    files: adapter.values.files
                 });
             } else {
                 adapter.onceValues(async e => {
@@ -260,7 +340,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         base: baseUri.toString(),
                         flowPath: document.uri.fsPath,
                         values: await e.values.getResultValues(this.adapterHelper.getId(document.uri)),
-                        storeVals: this.context.workspaceState.get('ply-user-values')
+                        storeVals: this.context.workspaceState.get('ply-user-values'),
+                        files: e.values.files
                     });
                     this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
                 });
@@ -274,7 +355,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         action: flowAction.action,
                         target: flowAction.uri.fragment,
                         options: flowAction.options
-
                     });
                 }
             }));

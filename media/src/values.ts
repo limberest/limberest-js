@@ -5,8 +5,9 @@ export class Values {
     constructor(
         readonly flowFile: string,
         readonly iconBase: string,
+        readonly files: string[],
         readonly defaults: object,
-        readonly storeVals: any
+        public storeVals: any,
     ) { }
 
     /**
@@ -17,7 +18,7 @@ export class Values {
      */
     async prompt(flowOrStep: flowbee.Flow | flowbee.Step, action: string, onlyIfNeeded: boolean,
         storageCall: (key: string, storeVals?: { [key: string]: string }) => void):
-      Promise<{[key: string]: string} | undefined> {
+      Promise<{[key: string]: string} | 'Files' | undefined> {
         if (document.getElementById('flow-values')?.style?.display === 'flex') {
             return;
         }
@@ -79,9 +80,18 @@ export class Values {
                 }
             }
 
-            const tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
+            let tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
             if (tableVal && tableVal.length === 2) {
-                const vals = tableVal[1];
+                if (tableVal[0] === 'Files') {
+                    return 'Files';
+                }
+
+                while ((tableVal as any)[0] === 'Reset') {
+                    localStorage.setItem(storageKey, '{}');
+                    tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
+                }
+
+                const vals = (tableVal as any)[1];
                 // save entered values in local storage
                 if (vals) {
                     const storageVals: {[key: string]: string} = {};
@@ -100,13 +110,13 @@ export class Values {
                     localStorage.removeItem(storageKey);
                     storageCall(storageKey);
                 }
-                if (tableVal[0] === 'Save') {
+                if ((tableVal as any)[0] === 'Save') {
                     return; // Saved only
                 } else {
                     if (vals) {
                         return this.consolidateValues(vals);
                     } else {
-                        return tableVal[0] === 'Run' ? {} : vals;
+                        return (tableVal as any)[0] === 'Run' ? {} : vals;
                     }
                 }
             } else {
@@ -143,6 +153,15 @@ export class Values {
             }
         }
         return needed;
+    }
+
+    get isRows(): boolean {
+        for (const file of this.files) {
+            if (file.endsWith('.csv') || file.endsWith('.xlsx')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private getExpressions(content: string): string[] | null {
@@ -324,9 +343,19 @@ export class Values {
             div.appendChild(content);
             const footer = document.createElement('div') as HTMLDivElement;
             footer.className = 'flowbee-config-footer';
+            const filesButton = document.createElement('input') as HTMLInputElement;
+            filesButton.type = 'button';
+            filesButton.value = 'Values Files...';
+            filesButton.onclick = _e => {
+                div.style.display = 'none';
+                div.innerHTML = '';
+                resolve(['Files', undefined]);
+            };
+            filesButton.className = 'flow-values-files';
+            footer.appendChild(filesButton);
             const saveButton = document.createElement('input') as HTMLInputElement;
             saveButton.type = 'button';
-            saveButton.value = 'Set Values';
+            saveButton.value = 'Save';
             saveButton.onclick = _e => {
                 div.style.display = 'none';
                 div.innerHTML = '';
@@ -335,13 +364,23 @@ export class Values {
             footer.appendChild(saveButton);
             const okButton = document.createElement('input') as HTMLInputElement;
             okButton.type = 'button';
-            okButton.value = action;
+            okButton.value = `Save & ${action}`;
             okButton.onclick = _e => {
                 div.style.display = 'none';
                 div.innerHTML = '';
                 resolve([action, this.fromString(value)]);
             };
             footer.appendChild(okButton);
+            const resetButton = document.createElement('input') as HTMLInputElement;
+            resetButton.type = 'button';
+            resetButton.value = 'Reset';
+            resetButton.onclick = _e => {
+                div.style.display = 'none';
+                div.innerHTML = '';
+                resolve(['Reset', this.fromString(value)]);
+            };
+            footer.appendChild(resetButton);
+
             const cancelButton = document.createElement('input') as HTMLInputElement;
             cancelButton.type = 'button';
             cancelButton.value = 'Cancel';

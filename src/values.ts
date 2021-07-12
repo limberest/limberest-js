@@ -21,6 +21,7 @@ export class Values implements Disposable {
     private disposables: { dispose(): void }[] = [];
     private config: PlyConfig;
     private _plyValues: object | undefined;
+    files: string[] | undefined;
     private resultWatcher?: vscode.FileSystemWatcher;
     // result file uri to values object
     private resultValues = new Map<string,object>();
@@ -83,9 +84,7 @@ export class Values implements Disposable {
             const valuesWatcher = vscode.workspace.createFileSystemWatcher(file);
             this.disposables.push(valuesWatcher);
             const onValuesFileChange = () => {
-                this.resultValues.clear();
-                this._plyValues = undefined;
-                this._onValuesUpdate.emit({});
+                this.clear();
             };
             valuesWatcher.onDidChange(_uri => onValuesFileChange());
             valuesWatcher.onDidDelete(uri => {
@@ -173,9 +172,18 @@ export class Values implements Disposable {
 
     async getPlyValues(): Promise<object | void> {
         if (!this._plyValues) {
-            this._plyValues = await new ply.Values(this.config.plyOptions.valuesFiles, new ply.Logger()).read();
+            this.files = this.config.plyOptions.valuesFiles;
+            const plyValues = new ply.Values(this.config.plyOptions.valuesFiles, new ply.Logger());
+            this._plyValues = await plyValues.read();
         }
         return this._plyValues || {};
+    }
+
+    clear() {
+        this.resultValues.clear();
+        this._plyValues = undefined;
+        this.config.clearPlyOptions();
+        this._onValuesUpdate.emit({});
     }
 
     dispose() {
