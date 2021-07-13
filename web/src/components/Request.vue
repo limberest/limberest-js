@@ -1,14 +1,25 @@
 <template>
   <div>
-    <div class="request-name">Create Movie</div>
+    <div class="request-name">
+      Create Movie
+    </div>
     <endpoint />
     <el-tabs tab-position="left">
       <el-tab-pane label="Body">
-        <editor :value="value" :language="language"></editor>
+        <editor
+          :value="value"
+          :language="language"
+        />
       </el-tab-pane>
-      <el-tab-pane label="Query">Config</el-tab-pane>
-      <el-tab-pane label="Headers">Role</el-tab-pane>
-      <el-tab-pane label="Source">Task</el-tab-pane>
+      <el-tab-pane label="Query">
+        Config
+      </el-tab-pane>
+      <el-tab-pane label="Headers">
+        Role
+      </el-tab-pane>
+      <el-tab-pane label="Source">
+        Task
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -18,8 +29,8 @@ import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 
 export default {
+  name: 'Request',
   components: { Endpoint, Editor },
-  name: 'request',
   props: {
   },
   data() {
@@ -62,7 +73,7 @@ export default {
   "year": 1934
 }
 `
-    }
+    };
   }
 };
 </script>

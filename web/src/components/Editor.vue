@@ -1,6 +1,5 @@
 <template>
-  <div class="editor-container">
-  </div>
+  <div class="editor-container" />
 </template>
 
 <script>
@@ -11,7 +10,7 @@ import JsonWorker from '../workers/json.worker.js';
 self.MonacoEnvironment = {
   // this doesn't work because of: https://github.com/microsoft/vscode/issues/87282
   // (Error: Unexpected usage at EditorSimpleWorker.loadForeignModule)
-  getWorker: function(moduleId, label) {
+  getWorker: function(_moduleId, label) {
     if (label === 'json') {
       return new JsonWorker();
     } else {
@@ -21,7 +20,7 @@ self.MonacoEnvironment = {
 };
 
 export default {
-  name: 'editor',
+  name: 'Editor',
   props: {
     language: {
       type: String,
@@ -30,24 +29,6 @@ export default {
     value: {
       type: String,
       required: true
-    }
-  },
-  methods: {
-    initMonaco() {
-      this.editor = monaco.editor.create(this.$el, {
-        value: this.value,
-        language: this.language,
-        theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
-        minimap: {
-		      enabled: false
-  	    }
-      });
-    },
-    syncTheme() {
-      const theme = document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs';
-      if (this.editor) {
-        monaco.editor.setTheme(theme);
-      }
     }
   },
   mounted: function () {
@@ -59,6 +40,24 @@ export default {
         this.syncTheme();
       }
     });
-  }
+  },
+  methods: {
+    initMonaco() {
+      this.editor = monaco.editor.create(this.$el, {
+        value: this.value,
+        language: this.language,
+        theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
+        minimap: {
+          enabled: false
+        }
+      });
+    },
+    syncTheme() {
+      const theme = document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs';
+      if (this.editor) {
+        monaco.editor.setTheme(theme);
+      }
+    }
+  },
 };
 </script>

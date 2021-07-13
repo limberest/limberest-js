@@ -1,15 +1,26 @@
 <template>
   <div style="display:flex;margin-left:100px;">
-    <el-select v-model="method" style="top:4px;width:135px;">
+    <el-select
+      v-model="method"
+      style="top:4px;width:135px;"
+    >
       <el-option
         v-for="item in methods"
         :key="item.value"
         :label="item.label"
-        :value="item.value">
-      </el-option>
+        :value="item.value"
+      />
     </el-select>
-    <el-input placeholder="https://api.example.com/things" v-model="url"></el-input>
-    <el-button type="text" style="margin-left:7px;">Submit</el-button>
+    <el-input
+      v-model="url"
+      placeholder="https://api.example.com/things"
+    />
+    <el-button
+      type="text"
+      style="margin-left:7px;"
+    >
+      Submit
+    </el-button>
   </div>
 </template>
 
@@ -17,7 +28,7 @@
 
 export default {
 
-  name: 'request',
+  name: 'Request',
   data() {
     return {
       methods: [{
@@ -38,7 +49,7 @@ export default {
       }],
       method: 'post',
       url: '${baseUrl}/movies'
-    }
+    };
   }
-}
+};
 </script>
