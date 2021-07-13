@@ -3,8 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
+  <!-- style-src 'unsafe-inline' required due to: https://github.com/microsoft/monaco-editor/issues/271-->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none'; img-src ${cspSource}; style-src ${cspSource}; font-src ${cspSource}; script-src 'nonce-${nonce}';">
+    content="default-src 'none'; img-src ${cspSource}; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource}; script-src 'nonce-${nonce}';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="${webBase}/out/bundle.css" rel="stylesheet" />
   <link href="${webBase}/out/style.css" rel="stylesheet" />

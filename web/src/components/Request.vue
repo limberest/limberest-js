@@ -14,14 +14,14 @@
 </template>
 
 <script>
-import { requestState } from '../rstate'
-import Endpoint from './Endpoint.vue'
-import BodyContent from './BodyContent.vue'
+import { requestState } from '../rstate';
+import Endpoint from './Endpoint.vue';
+import BodyContent from './BodyContent.vue';
 
 export default {
   components: { Endpoint, BodyContent },
   name: 'request',
   props: {
   }
-}
+};
 </script>

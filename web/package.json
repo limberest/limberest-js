@@ -9,6 +9,7 @@
   "dependencies": {
     "element-plus": "latest",
     "highlight.js": "^11.1.0",
+    "monaco-editor": "^0.25.2",
     "vue": "^3.1.4"
   },
   "devDependencies": {

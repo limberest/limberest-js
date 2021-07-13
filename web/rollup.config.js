@@ -11,7 +11,8 @@ export default {
     input: 'src/main.ts',
     output: {
         file: 'out/bundle.js',
-        format: 'es'
+        format: 'es',
+        inlineDynamicImports: true
     },
     plugins: [
         vue(),
@@ -23,7 +24,7 @@ export default {
         }),
         replace({
             preventAssignment: true,
-            'process.env.NODE_ENV': JSON.stringify('production'),
+            'process.env.NODE_ENV': JSON.stringify('production')
         }),
         copy({
             watch: 'css/style.scss',
