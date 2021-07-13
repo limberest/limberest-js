@@ -23,33 +23,42 @@ self.MonacoEnvironment = {
 export default {
   name: 'editor',
   props: {
+    language: {
+      type: String,
+      required: true
+    },
     value: {
       type: String,
       required: true
-    },
-    theme: {
-      type: String,
-      required: true
-    },
-    language: String
+    }
   },
   methods: {
     initMonaco() {
-      monaco.editor.create(this.$el, {
+      this.editor = monaco.editor.create(this.$el, {
         value: this.value,
         language: this.language,
-        theme: this.theme,
+        theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
         minimap: {
 		      enabled: false
   	    }
       });
+    },
+    syncTheme() {
+      const theme = document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs';
+      if (this.editor) {
+        monaco.editor.setTheme(theme);
+      }
     }
   },
   mounted: function () {
-      console.log("THEME: " + this.theme);
     this.$nextTick(function () {
       this.initMonaco();
-    })
+    });
+    window.addEventListener('message', async (event) => {
+      if (event.data.type === 'theme-change') {
+        this.syncTheme();
+      }
+    });
   }
-}
+};
 </script>

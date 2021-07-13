@@ -4,7 +4,7 @@
     <endpoint />
     <el-tabs tab-position="left">
       <el-tab-pane label="Body">
-        <editor :value="value" :language="language" :theme="theme"></editor>
+        <editor :value="value" :language="language"></editor>
       </el-tab-pane>
       <el-tab-pane label="Query">Config</el-tab-pane>
       <el-tab-pane label="Headers">Role</el-tab-pane>
