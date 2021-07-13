@@ -14,7 +14,6 @@
 </template>
 
 <script>
-import { requestState } from '../rstate'
 
 export default {
 

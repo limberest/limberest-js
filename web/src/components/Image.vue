@@ -3,7 +3,6 @@
 </template>
 
 <script>
-import { requestState } from '../rstate'
 
 export default {
   name: 'Image',

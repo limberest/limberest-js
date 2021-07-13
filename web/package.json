@@ -2,9 +2,12 @@
   "name": "ply-web",
   "version": "0.0.1",
   "scripts": {
-    "build": "rollup -c",
+    "build": "npm run monaco-workers && npm run fonts && rollup -c",
     "watch": "rollup --watch -c",
-    "fonts": "cp -R fonts out"
+    "fonts": "cp -R fonts out",
+    "editor-worker": "parcel build node_modules/monaco-editor/esm/vs/editor/editor.worker.js --dist-dir src/workers",
+    "json-worker": "parcel build node_modules/monaco-editor/esm/vs/language/json/json.worker.js --dist-dir src/workers",
+    "monaco-workers": "npm run editor-worker && npm run json-worker"
   },
   "dependencies": {
     "element-plus": "latest",
@@ -21,9 +24,11 @@
     "eslint": "^7.27.0",
     "eslint-plugin-vue": "^7.13.0",
     "node-sass": "^6.0.1",
+    "parcel": "^2.0.0-beta.3.1",
     "rollup": "^2.53.1",
     "rollup-plugin-copy-watch": "^0.0.1",
     "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-serve": "^1.1.0",
     "rollup-plugin-vue": "^6.0.0",
     "typescript": "^4.2.4"
   }

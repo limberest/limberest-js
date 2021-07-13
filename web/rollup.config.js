@@ -6,6 +6,7 @@ import postcss from 'rollup-plugin-postcss';
 import replace from '@rollup/plugin-replace';
 import copy from 'rollup-plugin-copy-watch';
 import sass from 'node-sass';
+import serve from 'rollup-plugin-serve';
 
 export default {
     input: 'src/main.ts',
@@ -34,6 +35,7 @@ export default {
                 rename: 'style.css',
                 transform: (contents) => sass.renderSync({ data: contents.toString() }).css
             }]
-        })
+        }),
+        serve('out')
     ]
 };

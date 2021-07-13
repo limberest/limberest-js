@@ -2,8 +2,7 @@ import { createApp } from 'vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/lib/theme-chalk/index.css';
 import App from './App.vue';
-import { updateState } from './state';
-import { requestState } from './rstate';
+// import { updateState } from './state';
 
 window.addEventListener('message', async (event) => {
     const message = event.data; // json message data from extension
@@ -18,12 +17,12 @@ window.addEventListener('message', async (event) => {
             // text = await templates.get('default.flow');
         }
 
-        updateState({
-            base: message.base,
-            file: message.file,
-            text,
-            readonly: message.readonly
-        });
+        // updateState({
+        //     base: message.base,
+        //     file: message.file,
+        //     text,
+        //     readonly: message.readonly
+        // });
     }
 });
 

@@ -4,7 +4,7 @@
     <endpoint />
     <el-tabs tab-position="left">
       <el-tab-pane label="Body">
-        <body-content></body-content>
+        <editor :value="value" :language="language" :theme="theme"></editor>
       </el-tab-pane>
       <el-tab-pane label="Query">Config</el-tab-pane>
       <el-tab-pane label="Headers">Role</el-tab-pane>
@@ -14,14 +14,55 @@
 </template>
 
 <script>
-import { requestState } from '../rstate';
 import Endpoint from './Endpoint.vue';
-import BodyContent from './BodyContent.vue';
+import Editor from './Editor.vue';
 
 export default {
-  components: { Endpoint, BodyContent },
+  components: { Endpoint, Editor },
   name: 'request',
   props: {
+  },
+  data() {
+    return {
+      language: 'json',
+      theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark': 'vs',
+      value: `{
+  "credits": [
+    {
+      "name": "Alan Croxland",
+      "role": "director"
+    },
+    {
+      "name": "Warren William",
+      "role": "actor"
+    },
+    {
+      "name": "Mary Astor",
+      "role": "actor"
+    },
+    {
+      "name": "Allen Jenkins",
+      "role": "actor"
+    },
+    {
+      "name": "Grant Mitchell",
+      "role": "actor"
+    },
+    {
+      "name": "Helen Trenholme",
+      "role": "actor"
+    }
+  ],
+  "poster": "cothd.jpg",
+  "title": "The Case of the Howling Dog",
+  "webRef": {
+    "ref": "tt0024958",
+    "site": "imdb.com"
+  },
+  "year": 1934
+}
+`
+    }
   }
 };
 </script>

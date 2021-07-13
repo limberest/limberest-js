@@ -2,8 +2,9 @@ pre {
   margin: 0;
 }
 
-.body-editor {
-  height: 100%;
+.editor-container {
+  height: 100vh;
+  overflow: hidden;
 }
 
 #app {
