@@ -4,9 +4,10 @@
       v-for="request in requests"
       :key="request.name"
     >
-      <request-item
+      <request
         :request="request"
         @updateRequest="onUpdate"
+        @updateRequestSource="onUpdateSource"
         @submitRequest="onSubmit"
       />
     </div>
@@ -15,7 +16,7 @@
 
 <script>
 import * as jsYaml from 'js-yaml';
-import RequestItem from './components/RequestItem.vue';
+import Request from './components/Request.vue';
 import { Options, defaultOptions } from './model/options';
 // import { updateState } from '../state';
 
@@ -25,7 +26,7 @@ const vscode = acquireVsCodeApi();
 export default {
   name: 'App',
   components: {
-    RequestItem
+    Request
   },
   data() {
     return {
@@ -80,6 +81,7 @@ export default {
           reqs[name] = bare;
           return reqs;
         }, {});
+        // TODO options prop
         const indent = defaultOptions.indent;
         const text = jsYaml.dump(obj, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
         vscode.postMessage({ type: 'change', text });
@@ -96,6 +98,9 @@ export default {
           message: { level: 'error', text: err.message }
         });
       }
+    },
+    onUpdateSource(sourceUpdate) {
+      console.log("SOURCE UPDATE: " + sourceUpdate.requestName + ":\n" + sourceUpdate.source);
     },
     onSubmit(requestName) {
       const request = this.requests.find(req => req.name === requestName);

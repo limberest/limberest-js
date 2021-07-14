@@ -13,28 +13,30 @@
         <editor
           :value="request.body"
           :language="language"
-          @updateBody="onUpdateBody"
+          @updateSource="onUpdateBody"
         />
       </el-tab-pane>
       <el-tab-pane label="Query">
-        Config
+        TODO: Query Params
       </el-tab-pane>
       <el-tab-pane label="Headers">
         Headers Here
       </el-tab-pane>
       <el-tab-pane label="Source">
-        Source Here?
+        <pre><code class="">{{ requestSource }}</code></pre>
       </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
 <script>
+import * as jsYaml from 'js-yaml';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
+import { Options, defaultOptions } from '../model/options';
 
 export default {
-  name: 'RequestItem',
+  name: 'Request',
   components: { Endpoint, Editor },
   props: {
     request: {
@@ -44,22 +46,33 @@ export default {
   },
   emits: [
     'updateRequest',
+    'updateRequestSource',
     'submitRequest'
   ],
   data() {
-    console.log("THIS.REQUEST: " + JSON.stringify(this.request, null, 2));
     return {
       language: 'json',
-      theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark': 'vs',
-      requestItem: this.request
+      theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark': 'vs'
     };
+  },
+  computed: {
+    requestSource() {
+      const { name, ...bare } = this.request;
+      const obj = { [name]: bare };
+      // TODO options prop
+      const indent = defaultOptions.indent;
+      return jsYaml.dump(obj, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+    }
   },
   methods: {
     onUpdate(updatedRequest) {
       this.$emit('updateRequest', updatedRequest);
     },
-    onUpdateBody(value) {
-      this.$emit('updateRequest', { ...this.request, body: value });
+    onUpdateBody(content) {
+      this.$emit('updateRequest', { ...this.request, body: content });
+    },
+    onUpdateSource(source) {
+      this.$emit('updateRequestSource', { requestName: this.request.name, source });
     },
     onSubmit(requestName) {
       this.$emit('submitRequest', requestName);

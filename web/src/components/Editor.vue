@@ -32,7 +32,7 @@ export default {
     }
   },
   emits: [
-    'updateBody',
+    'updateSource',
   ],
   watch: {
     value(newValue) {
@@ -73,7 +73,7 @@ export default {
       this.editor.onDidChangeModelContent( () => {
         const value = this.editor.getValue();
         if (this.value !== value) {
-          this.$emit('updateBody', value);
+          this.$emit('updateSource', value);
         }
       });
     },
@@ -82,10 +82,7 @@ export default {
       if (this.editor) {
         monaco.editor.setTheme(theme);
       }
-    },
-    update(value) {
-      this.$emit('updateBody', value);
-    },
+    }
   },
 };
 </script>

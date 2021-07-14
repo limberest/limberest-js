@@ -5,9 +5,6 @@ pre {
 .editor-container {
   height: 100vh;
   overflow: hidden;
-  border: 1px solid var(--vscode-panel-border);
-  border-radius: 4px;
-  padding-left: 8px;
 }
 
 #app {
@@ -40,6 +37,12 @@ pre {
   top: -5px;
 }
 
+.el-tab-pane {
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  padding-left: 8px;
+  min-height: 200px;
+}
 .el-tabs__item {
   color: var(--vscode-tab-inactiveForeground);
 }
