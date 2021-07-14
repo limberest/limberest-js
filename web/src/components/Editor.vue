@@ -56,7 +56,7 @@ export default {
         value: this.value,
         language: this.language,
         theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
-        lineNumber: false,
+        lineNumbers: false,
         minimap: {
           enabled: false
         }

@@ -25,6 +25,7 @@
 </template>
 
 <script>
+import * as jsYaml from 'js-yaml';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 // import { updateState } from '../state';
@@ -65,9 +66,14 @@ export default {
               text = message.text.trim();
           }
 
-          this.bodyContent = text;
-
-          console.log("bodyContent: " + this.bodyContent);
+          try {
+            console.log("YAML: " + text);
+            const reqs = jsYaml.load(text, message.file);
+            this.bodyContent = reqs[Object.keys(reqs)[0]].body || '';
+          } catch (err) {
+            // TODO better error display
+            this.bodyContent = err.stringify();
+          }
 
           // updateState({
           //     base: message.base,
