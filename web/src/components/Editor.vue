@@ -51,12 +51,18 @@ export default {
     });
   },
   methods: {
+    // TODO: which of these options should be configurable?
     initMonaco() {
       this.editor = monaco.editor.create(this.$el, {
         value: this.value,
         language: this.language,
         theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
+        folding: false,
         lineNumbers: false,
+        lineDecorationsWidth: 0,
+        lineNumbersMinChars: 0,
+        glyphMargin: false,
+        renderIndentGuides: false,
         minimap: {
           enabled: false
         }
