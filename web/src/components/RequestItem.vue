@@ -3,12 +3,17 @@
     <div class="request-name">
       {{ request.name }}
     </div>
-    <endpoint :request="request" />
+    <endpoint
+      :request="request"
+      @updateRequest="onUpdate"
+      @submitRequest="onSubmit"
+    />
     <el-tabs tab-position="left">
       <el-tab-pane label="Body">
         <editor
           :value="request.body"
           :language="language"
+          @updateBody="onUpdateBody"
         />
       </el-tab-pane>
       <el-tab-pane label="Query">
@@ -37,11 +42,28 @@ export default {
       required: true
     }
   },
+  emits: [
+    'updateRequest',
+    'submitRequest'
+  ],
   data() {
+    console.log("THIS.REQUEST: " + JSON.stringify(this.request, null, 2));
     return {
       language: 'json',
-      theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark': 'vs'
+      theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark': 'vs',
+      requestItem: this.request
     };
   },
+  methods: {
+    onUpdate(updatedRequest) {
+      this.$emit('updateRequest', updatedRequest);
+    },
+    onUpdateBody(value) {
+      this.$emit('updateRequest', { ...this.request, body: value });
+    },
+    onSubmit(requestName) {
+      this.$emit('submitRequest', requestName);
+    }
+  }
 };
 </script>

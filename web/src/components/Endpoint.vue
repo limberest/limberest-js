@@ -3,6 +3,7 @@
     <el-select
       v-model="method"
       style="top:4px;width:135px;"
+      @change="update('method', $event)"
     >
       <el-option
         v-for="item in methods"
@@ -14,10 +15,12 @@
     <el-input
       v-model="url"
       placeholder="https://api.example.com/things"
+      @input="update('url', $event)"
     />
     <el-button
       type="text"
       style="margin-left:7px;"
+      @click="submit"
     >
       Submit
     </el-button>
@@ -34,6 +37,10 @@ export default {
       required: true
     }
   },
+  emits: [
+    'updateRequest',
+    'submitRequest'
+  ],
   data() {
     return {
       methods: [{
@@ -55,6 +62,14 @@ export default {
       method: this.request.method,
       url: this.request.url
     };
+  },
+  methods: {
+    update(field, value) {
+      this.$emit('updateRequest', { ...this.request, [field]: value });
+    },
+    submit() {
+      this.$emit('submitRequest', this.request.name);
+    }
   }
 };
 </script>

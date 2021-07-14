@@ -31,6 +31,9 @@ export default {
       required: true
     }
   },
+  emits: [
+    'updateBody',
+  ],
   watch: {
     value(newValue) {
       if (this.editor) {
@@ -67,13 +70,22 @@ export default {
           enabled: false
         }
       });
+      this.editor.onDidChangeModelContent( () => {
+        const value = this.editor.getValue();
+        if (this.value !== value) {
+          this.$emit('updateBody', value);
+        }
+      });
     },
     syncTheme() {
       const theme = document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs';
       if (this.editor) {
         monaco.editor.setTheme(theme);
       }
-    }
+    },
+    update(value) {
+      this.$emit('updateBody', value);
+    },
   },
 };
 </script>

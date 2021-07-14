@@ -4,7 +4,11 @@
       v-for="request in requests"
       :key="request.name"
     >
-      <request-item :request="request" />
+      <request-item
+        :request="request"
+        @updateRequest="onUpdate"
+        @submitRequest="onSubmit"
+      />
     </div>
   </div>
 </template>
@@ -12,6 +16,7 @@
 <script>
 import * as jsYaml from 'js-yaml';
 import RequestItem from './components/RequestItem.vue';
+import { Options, defaultOptions } from './model/options';
 // import { updateState } from '../state';
 
 /* eslint-disable-next-line */
@@ -38,6 +43,7 @@ export default {
       const message = event.data; // json message data from extension
       console.debug(`message: ${JSON.stringify(message, null, 2)}`);
       if (message.type === 'update') {
+        try {
           const isNew = !message.text;
           let text;
           if (isNew) {
@@ -47,26 +53,54 @@ export default {
           } else {
               text = message.text.trim();
           }
-
-          try {
-            const reqs = jsYaml.load(text, message.file);
-            this.requests = Object.keys(reqs).map(reqName => {
-              return { name: reqName, ...reqs[reqName] };
-            });
-            // updateState({
-            //     base: message.base,
-            //     file: message.file,
-            //     text,
-            //     readonly: message.readonly
-            // });
-          } catch (err) {
-            console.error(err);
-            vscode.postMessage({
-              type: 'alert',
-              message: { level: 'error', text: err.message }
-            });
-          }
+          const reqs = jsYaml.load(text, message.file);
+          this.requests = Object.keys(reqs).map(reqName => {
+            return { name: reqName, ...reqs[reqName] };
+          });
+          // updateState({
+          //     base: message.base,
+          //     file: message.file,
+          //     text,
+          //     readonly: message.readonly
+          // });
+        } catch (err) {
+          console.error(err);
+          vscode.postMessage({
+            type: 'alert',
+            message: { level: 'error', text: err.message }
+          });
+        }
       }
+    },
+    onUpdate(updatedRequest) {
+      try {
+        this.requests[this.requests.findIndex(req => req.name === updatedRequest.name)] = updatedRequest;
+        const obj = this.requests.reduce((reqs, req) => {
+          const { name, ...bare } = req;
+          reqs[name] = bare;
+          return reqs;
+        }, {});
+        const indent = defaultOptions.indent;
+        const text = jsYaml.dump(obj, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+        vscode.postMessage({ type: 'change', text });
+        // updateState({
+        //     base: message.base,
+        //     file: message.file,
+        //     text,
+        //     readonly: message.readonly
+        // });
+      } catch (err) {
+        console.error(err);
+        vscode.postMessage({
+          type: 'alert',
+          message: { level: 'error', text: err.message }
+        });
+      }
+    },
+    onSubmit(requestName) {
+      const request = this.requests.find(req => req.name === requestName);
+      // need to unwrap proxy for message via Object.assign() -- TODO: better way?
+      vscode.postMessage({ type: 'submit', request: JSON.parse(JSON.stringify(request)) });
     }
   }
 };

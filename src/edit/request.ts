@@ -79,6 +79,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     await vscode.workspace.applyEdit(edit);
                 }
                 this.adapterHelper.removeActualResult(document.uri);
+            } else if (message.type === 'submit') {
+                console.log("SUBMIT: " + JSON.stringify(message.request));
             }
         }));
 
