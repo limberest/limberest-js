@@ -43,7 +43,9 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         };
 
         this.disposables.push(webviewPanel.webview.onDidReceiveMessage(async message => {
-            if (message.type === 'change') {
+            if (message.type === 'ready') {
+                updateWebview();
+            } else if (message.type === 'change') {
                 const isNew = !document.getText().trim();
                 if (isNew) {
                     fs.writeFileSync(document.uri.fsPath, message.text);
@@ -121,7 +123,5 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             }
             this.disposables = [];
         });
-
-        updateWebview();
     }
 }

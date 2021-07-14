@@ -7,7 +7,7 @@
     <el-tabs tab-position="left">
       <el-tab-pane label="Body">
         <editor
-          :value="value"
+          :value="bodyContent"
           :language="language"
         />
       </el-tab-pane>
@@ -15,10 +15,10 @@
         Config
       </el-tab-pane>
       <el-tab-pane label="Headers">
-        Role
+        Headers Here
       </el-tab-pane>
       <el-tab-pane label="Source">
-        Task
+        Source Here?
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -27,6 +27,10 @@
 <script>
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
+// import { updateState } from '../state';
+
+/* eslint-disable-next-line */
+const vscode = acquireVsCodeApi();
 
 export default {
   name: 'Request',
@@ -37,43 +41,43 @@ export default {
     return {
       language: 'json',
       theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark': 'vs',
-      value: `{
-  "credits": [
-    {
-      "name": "Alan Croxland",
-      "role": "director"
-    },
-    {
-      "name": "Warren William",
-      "role": "actor"
-    },
-    {
-      "name": "Mary Astor",
-      "role": "actor"
-    },
-    {
-      "name": "Allen Jenkins",
-      "role": "actor"
-    },
-    {
-      "name": "Grant Mitchell",
-      "role": "actor"
-    },
-    {
-      "name": "Helen Trenholme",
-      "role": "actor"
-    }
-  ],
-  "poster": "cothd.jpg",
-  "title": "The Case of the Howling Dog",
-  "webRef": {
-    "ref": "tt0024958",
-    "site": "imdb.com"
-  },
-  "year": 1934
-}
-`
+      bodyContent: ''
     };
+  },
+  mounted: function () {
+    this.$nextTick(function () {
+      window.addEventListener('message', this.handleMessage);
+      vscode.postMessage({ type: 'ready' });
+    });
+  },
+  methods: {
+    handleMessage(event) {
+      const message = event.data; // json message data from extension
+      console.debug(`message: ${JSON.stringify(message, null, 2)}`);
+      if (message.type === 'update') {
+          const isNew = !message.text;
+          let text;
+          if (isNew) {
+              // TODO
+              text = '';
+              // text = await templates.get('default.flow');
+          } else {
+              text = message.text.trim();
+          }
+
+          this.bodyContent = text;
+
+          console.log("bodyContent: " + this.bodyContent);
+
+          // updateState({
+          //     base: message.base,
+          //     file: message.file,
+          //     text,
+          //     readonly: message.readonly
+          // });
+      }
+      // this.$forceUpdate();
+    }
   }
 };
 </script>

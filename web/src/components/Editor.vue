@@ -31,6 +31,15 @@ export default {
       required: true
     }
   },
+  watch: {
+    value(newValue) {
+      if (this.editor) {
+        if (newValue !== this.editor.getValue()) {
+          this.editor.setValue(newValue);
+        }
+      }
+    }
+  },
   mounted: function () {
     this.$nextTick(function () {
       this.initMonaco();
@@ -47,6 +56,7 @@ export default {
         value: this.value,
         language: this.language,
         theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
+        lineNumber: false,
         minimap: {
           enabled: false
         }
