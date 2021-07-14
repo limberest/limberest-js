@@ -45,6 +45,26 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         this.disposables.push(webviewPanel.webview.onDidReceiveMessage(async message => {
             if (message.type === 'ready') {
                 updateWebview();
+            } else if (message.type === 'alert' || message.type === 'confirm') {
+                const options: vscode.MessageOptions = {};
+                const items: string[] = [];
+                if (message.type === 'confirm') {
+                    options.modal = true;
+                    items.push('OK');
+                }
+                let res;
+                if (message.message.level === 'info') {
+                    res = await vscode.window.showInformationMessage(message.message.text, options, ...items);
+                } else if (message.message.level === 'warning') {
+                    res = await vscode.window.showWarningMessage(message.message.text, options, ...items);
+                } else {
+                    res = await vscode.window.showErrorMessage(message.message.text, options, ...items);
+                }
+                webviewPanel.webview.postMessage({
+                    type: 'confirm',
+                    id: message.message.id,
+                    result: res === 'OK'
+                });
             } else if (message.type === 'change') {
                 const isNew = !document.getText().trim();
                 if (isNew) {

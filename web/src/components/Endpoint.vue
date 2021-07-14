@@ -27,8 +27,13 @@
 <script>
 
 export default {
-
-  name: 'Request',
+  name: 'Endpoint',
+  props: {
+    request: {
+      type: Object,
+      required: true
+    }
+  },
   data() {
     return {
       methods: [{
@@ -47,8 +52,8 @@ export default {
         value: 'delete',
         label: 'DELETE'
       }],
-      method: 'post',
-      url: '${baseUrl}/movies'
+      method: this.request.method,
+      url: this.request.url
     };
   }
 };

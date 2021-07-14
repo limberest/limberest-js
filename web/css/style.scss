@@ -10,12 +10,16 @@ pre {
   padding-left: 8px;
 }
 
-#request {
+#app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+.request {
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
 .request-name {
   margin-top: 5px;
   font-size: 14px;

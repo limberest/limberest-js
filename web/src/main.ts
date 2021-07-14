@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/lib/theme-chalk/index.css';
-import Request from './components/Request.vue';
+import App from './App.vue';
 
-createApp(Request).use(ElementPlus).mount('#request');
+createApp(App).use(ElementPlus).mount('#app');
 
