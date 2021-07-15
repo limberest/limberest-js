@@ -6,8 +6,8 @@
     >
       <request
         :request="request"
+        @renameRequest="onRename"
         @updateRequest="onUpdate"
-        @updateRequestSource="onUpdateSource"
         @submitRequest="onSubmit"
       />
     </div>
@@ -38,6 +38,9 @@ export default {
       window.addEventListener('message', this.handleMessage);
       vscode.postMessage({ type: 'ready' });
     });
+  },
+  unmounted: function() {
+    window.removeEventListener('message', this.handleMessage);
   },
   methods: {
     handleMessage(event) {
@@ -84,6 +87,11 @@ export default {
           window.scrollTo(0, document.body.scrollHeight);
         });
       }
+    },
+    onRename(requestName, newRequestName) {
+      const request = this.requests.find(req => req.name === requestName);
+      request.name = newRequestName;
+      this.onUpdate(request);
     },
     onUpdate(updatedRequest) {
       try {

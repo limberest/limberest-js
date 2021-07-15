@@ -1,6 +1,13 @@
 <template>
   <div class="request">
-    <div class="request-name">
+    <div
+      class="request-name"
+      tabindex="0"
+      contenteditable="true"
+      @input="onRename"
+      @keydown="onNameKeyDown"
+      @blur="onNameBlur"
+    >
       {{ request.name }}
     </div>
     <endpoint
@@ -49,6 +56,7 @@ export default {
     }
   },
   emits: [
+    'renameRequest',
     'updateRequest',
     'updateRequestSource',
     'submitRequest'
@@ -56,7 +64,8 @@ export default {
   data() {
     return {
       language: 'json',
-      theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark': 'vs'
+      theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark': 'vs',
+      rename: this.request.name
     };
   },
   computed: {
@@ -69,6 +78,19 @@ export default {
     }
   },
   methods: {
+    onRename(event) {
+      this.rename = event.target.innerText.trim();
+    },
+    onNameKeyDown(event) {
+      if (event.key === 'Enter' || event.key === 'Escape') {
+        event.target.blur();
+      }
+    },
+    onNameBlur() {
+      if (this.rename !== this.request.name) {
+        this.$emit('renameRequest', this.request.name, this.rename);
+      }
+    },
     onUpdate(updatedRequest) {
       this.$emit('updateRequest', updatedRequest);
     },
@@ -84,7 +106,7 @@ export default {
     onUpdateHeaders(updatedHeaders) {
       this.$emit('updateRequest', { ...this.request, headers: updatedHeaders });
     },
-   onSubmit(requestName) {
+    onSubmit(requestName) {
       this.$emit('submitRequest', requestName);
     }
   }

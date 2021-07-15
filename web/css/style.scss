@@ -13,9 +13,14 @@ pre {
   margin-bottom: 20px;
 }
 .request-name {
+  display: inline-block;
   margin-top: 5px;
+  padding: 1px 3px;
   font-size: 14px;
   font-weight: bold;
+}
+.request-name:focus {
+  outline: 1px solid #409eff;
 }
 
 .editor-container {
