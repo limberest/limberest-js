@@ -2,11 +2,6 @@ pre {
   margin: 0;
 }
 
-.editor-container {
-  height: 100vh;
-  overflow: hidden;
-}
-
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -21,6 +16,30 @@ pre {
   margin-top: 5px;
   font-size: 14px;
   font-weight: bold;
+}
+
+.editor-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.table-container {
+  display: flex;
+  position: static;
+  width: calc(100% - 2px);
+  height: 100%;
+  border: none;
+  box-shadow: none;
+}
+.table-container .flowbee-config-tab-content th {
+  border: 1px solid var(--vscode-panel-border);
+}
+.table-container td {
+  border: 1px solid var(--vscode-panel-border);
+}
+.table-container td:focus {
+  outline: 1px solid #409eff;
+  border-left: 1px solid #409eff;
 }
 
 .el-input__inner {

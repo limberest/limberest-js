@@ -2,15 +2,17 @@
   "name": "ply-web",
   "version": "0.0.1",
   "scripts": {
-    "build": "npm run fonts && npm run monaco-workers && rollup -c",
+    "build": "npm run fonts && npm run styles && npm run monaco-workers && rollup -c",
     "watch": "rollup --watch -c",
     "fonts": "npx mkdirp out && cp -R fonts out",
+    "styles": "cp node_modules/flowbee/dist/css/style.css out/flowbee.css",
     "editor-worker": "parcel build node_modules/monaco-editor/esm/vs/editor/editor.worker.js --dist-dir src/workers",
     "json-worker": "parcel build node_modules/monaco-editor/esm/vs/language/json/json.worker.js --dist-dir src/workers",
     "monaco-workers": "npm run editor-worker && npm run json-worker"
   },
   "dependencies": {
     "element-plus": "latest",
+    "flowbee": "^0.2.10",
     "js-yaml": "^4.1.0",
     "monaco-editor": "^0.25.2",
     "vue": "^3.1.4"

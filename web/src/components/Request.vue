@@ -20,7 +20,10 @@
         TODO: Query Params
       </el-tab-pane>
       <el-tab-pane label="Headers">
-        Headers Here
+        <table-comp
+          :value="request.headers"
+          @updateValue="onUpdateHeaders"
+        />
       </el-tab-pane>
       <el-tab-pane label="Source">
         <pre><code class="">{{ requestSource }}</code></pre>
@@ -33,11 +36,12 @@
 import * as jsYaml from 'js-yaml';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
+import TableComp from './Table.vue';
 import { Options, defaultOptions } from '../model/options';
 
 export default {
   name: 'Request',
-  components: { Endpoint, Editor },
+  components: { Endpoint, Editor, TableComp },
   props: {
     request: {
       type: Object,
@@ -69,7 +73,16 @@ export default {
       this.$emit('updateRequest', updatedRequest);
     },
     onUpdateBody(content) {
-      this.$emit('updateRequest', { ...this.request, body: content });
+      const request = { ...this.request };
+      if (content.trim().length > 0) {
+        request.body = content;
+      } else {
+        delete request.body;
+      }
+      this.$emit('updateRequest', request);
+    },
+    onUpdateHeaders(updatedHeaders) {
+      this.$emit('updateRequest', { ...this.request, headers: updatedHeaders });
     },
     onUpdateSource(source) {
       this.$emit('updateRequestSource', { requestName: this.request.name, source });
