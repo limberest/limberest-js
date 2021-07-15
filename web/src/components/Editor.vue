@@ -45,13 +45,15 @@ export default {
   },
   mounted: function () {
     this.$nextTick(function () {
+      if (!this.value) {
+        this.$el.style.height = '200px';
+      }
       this.initMonaco();
     });
-    window.addEventListener('message', async (event) => {
-      if (event.data.type === 'theme-change') {
-        this.syncTheme();
-      }
-    });
+    window.addEventListener('message', this.handleMessage);
+  },
+  unmounted: function() {
+    window.removeEventListener('message', this.handleMessage);
   },
   methods: {
     // TODO: which of these options should be configurable?
@@ -76,6 +78,11 @@ export default {
           this.$emit('updateSource', value);
         }
       });
+    },
+    handleMessage(event) {
+      if (event.data.type === 'theme-change') {
+        this.syncTheme();
+      }
     },
     syncTheme() {
       const theme = document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs';

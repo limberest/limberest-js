@@ -22,6 +22,10 @@ export default {
     this.$nextTick(function () {
       this.initTable();
     });
+    window.addEventListener('message', this.handleMessage);
+  },
+  unmounted: function() {
+    window.removeEventListener('message', this.handleMessage);
   },
   methods: {
     initTable() {
@@ -65,6 +69,11 @@ export default {
         }
       }
       return val;
+    },
+    handleMessage(event) {
+      if (event.data.type === 'theme-change') {
+        this.syncTheme();
+      }
     },
     syncTheme() {
       const theme = document.body.className.endsWith('vscode-light') ? 'light': 'dark';

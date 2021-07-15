@@ -84,10 +84,7 @@ export default {
     onUpdateHeaders(updatedHeaders) {
       this.$emit('updateRequest', { ...this.request, headers: updatedHeaders });
     },
-    onUpdateSource(source) {
-      this.$emit('updateRequestSource', { requestName: this.request.name, source });
-    },
-    onSubmit(requestName) {
+   onSubmit(requestName) {
       this.$emit('submitRequest', requestName);
     }
   }

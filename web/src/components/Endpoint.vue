@@ -14,7 +14,6 @@
     </el-select>
     <el-input
       v-model="url"
-      placeholder="https://api.example.com/things"
       @input="update('url', $event)"
     />
     <el-button

@@ -71,6 +71,18 @@ export default {
             message: { level: 'error', text: err.message }
           });
         }
+      } else if (message.type === 'action') {
+        let requestName = 'newRequest';
+        let i = 1;
+        while (this.requests.find(req => req.name === requestName)) {
+          requestName = 'newRequest' + (i++);
+        }
+        const newRequest = { name: requestName, method: 'get', headers: {} };
+        this.requests.push(newRequest);
+        this.onUpdate(newRequest);
+        this.$nextTick(function () {
+          window.scrollTo(0, document.body.scrollHeight);
+        });
       }
     },
     onUpdate(updatedRequest) {
@@ -98,9 +110,6 @@ export default {
           message: { level: 'error', text: err.message }
         });
       }
-    },
-    onUpdateSource(sourceUpdate) {
-      console.log("SOURCE UPDATE: " + sourceUpdate.requestName + ":\n" + sourceUpdate.source);
     },
     onSubmit(requestName) {
       const request = this.requests.find(req => req.name === requestName);

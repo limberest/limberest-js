@@ -306,6 +306,14 @@
         "command": "ply.flow.mode.inspect",
         "title": "Ply: Inspect Mode",
         "enablement": "resourceExtname == .flow"
+      },
+      {
+        "command": "ply.request.add-request",
+        "title": "Add New Request",
+        "icon": {
+          "dark": "./icons/add-dark.svg",
+          "light": "./icons/add-light.svg"
+        }
       }
     ],
     "keybindings": [
@@ -443,6 +451,13 @@
           "command": "ply.import.postman-item",
           "group": "6_postman",
           "when": "view == test-explorer && viewItem == collection"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "ply.request.add-request",
+          "group": "navigation",
+          "when": "resourceExtname == .ply"
         }
       ],
       "commandPalette": [

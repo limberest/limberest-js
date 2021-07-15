@@ -9,11 +9,11 @@ import { PlyRoots } from './plyRoots';
 import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
-import { FlowActionEvent, FlowEditor, FlowItemSelectEvent, FlowModeChangeEvent } from './edit/flow';
+import { RequestEditor, RequestActionEvent } from './edit/request';
+import { FlowEditor, FlowActionEvent, FlowItemSelectEvent, FlowModeChangeEvent } from './edit/flow';
 import { Postman } from './postman';
 import { PlyItem } from './item';
 import { AdapterHelper } from './adapterHelper';
-import { RequestEditor } from './edit/request';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -43,6 +43,11 @@ export async function activate(context: vscode.ExtensionContext) {
     // workspace folder uri to diff handler
     const diffHandlers = new Map<string,DiffHandler>();
 
+    const _onRequestAction = new Event<RequestActionEvent>();
+    const onRequestAction = (listener: Listener<RequestActionEvent>): Disposable => {
+        return _onRequestAction.on(listener);
+    };
+
     const _onFlowAction = new Event<FlowActionEvent>();
     const onFlowAction = (listener: Listener<FlowActionEvent>): Disposable => {
         return _onFlowAction.on(listener);
@@ -56,8 +61,11 @@ export async function activate(context: vscode.ExtensionContext) {
         return _onFlowModeChange.on(listener);
     };
 
-    const requestEditor = new RequestEditor(context, new AdapterHelper('requests', testAdapters));
+    const requestEditor = new RequestEditor(context, new AdapterHelper('requests', testAdapters), onRequestAction);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.request.file', requestEditor));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.request.add-request', async (...args: any[]) => {
+        _onRequestAction.emit({ uri: args[0], action: 'add' });
+    }));
 
     const flowEditor = new FlowEditor(context, new AdapterHelper('flows', testAdapters), onFlowAction, onFlowItemSelect, onFlowModeChange);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
@@ -147,7 +155,6 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(err.message);
         }
     };
-
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit', submitCommand));
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit-item', submitCommand));
 
@@ -183,7 +190,6 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(err.message);
         }
     };
-
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff', diffCommand));
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff-item', diffCommand));
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff.fragment-item', diffCommand));
@@ -234,9 +240,9 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(err.message);
         }
     };
-
     context.subscriptions.push(vscode.commands.registerCommand('ply.openResult', openResultCommand));
 
+    // postman import
     const postman = new Postman(log);
     const importPostmanCommand = async (...args: any[]) => await postman.import(args);
     context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman', importPostmanCommand));

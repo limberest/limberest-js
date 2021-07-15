@@ -1,8 +1,11 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
+import { Listener, Disposable } from 'flowbee';
 import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
+
+export interface RequestActionEvent { uri: vscode.Uri; action: string; }
 
 export class RequestEditor implements vscode.CustomTextEditorProvider {
 
@@ -10,7 +13,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
 
     constructor(
         private context: vscode.ExtensionContext,
-        private adapterHelper: AdapterHelper
+        private adapterHelper: AdapterHelper,
+        private onRequestAction: (listener: Listener<RequestActionEvent>) => Disposable,
     ) {
     }
 
@@ -137,6 +141,14 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 });
             }
 
+            this.disposables.push(this.onRequestAction(async requestAction => {
+                if (requestAction.uri.toString() === document.uri.toString()) {
+                    webviewPanel.webview.postMessage({
+                        type: 'action',
+                        action: 'add'
+                    });
+                }
+            }));
         }
 
         webviewPanel.onDidDispose(() => {
