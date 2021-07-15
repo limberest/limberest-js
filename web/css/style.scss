@@ -9,8 +9,9 @@ pre {
 }
 
 .request {
-  padding-bottom: 10px;
-  margin-bottom: 20px;
+  padding-bottom: 20px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
 }
 .request-name {
   display: inline-block;
@@ -21,6 +22,15 @@ pre {
 }
 .request-name:focus {
   outline: 1px solid #409eff;
+}
+
+.actions {
+  float: right;
+  margin-top: 5px;
+}
+
+.icon {
+  margin-left: 10px;
 }
 
 .editor-container {

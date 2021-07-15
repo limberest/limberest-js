@@ -10,6 +10,11 @@
     >
       {{ request.name }}
     </div>
+    <actions
+      :request="request"
+      :options="options"
+      @requestAction="onAction"
+    />
     <endpoint
       :request="request"
       @updateRequest="onUpdate"
@@ -41,16 +46,20 @@
 
 <script>
 import * as jsYaml from 'js-yaml';
+import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
-import { Options, defaultOptions } from '../model/options';
 
 export default {
   name: 'Request',
-  components: { Endpoint, Editor, TableComp },
+  components: { Actions, Endpoint, Editor, TableComp },
   props: {
     request: {
+      type: Object,
+      required: true
+    },
+    options: {
       type: Object,
       required: true
     }
@@ -59,7 +68,7 @@ export default {
     'renameRequest',
     'updateRequest',
     'updateRequestSource',
-    'submitRequest'
+    'requestAction'
   ],
   data() {
     return {
@@ -72,8 +81,7 @@ export default {
     requestSource() {
       const { name, ...bare } = this.request;
       const obj = { [name]: bare };
-      // TODO options prop
-      const indent = defaultOptions.indent;
+      const indent = this.options.indent;
       return jsYaml.dump(obj, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
   },
@@ -107,7 +115,10 @@ export default {
       this.$emit('updateRequest', { ...this.request, headers: updatedHeaders });
     },
     onSubmit(requestName) {
-      this.$emit('submitRequest', requestName);
+      this.onAction('submit', requestName);
+    },
+    onAction(action, requestName) {
+      this.$emit('requestAction', action, requestName);
     }
   }
 };
