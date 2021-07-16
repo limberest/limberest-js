@@ -1,5 +1,9 @@
 <template>
-  <div class="request">
+  <div
+    class="request"
+    :data-reqname="request.name"
+  >
+    <a :name="request.name" />
     <div
       class="request-name"
       tabindex="0"

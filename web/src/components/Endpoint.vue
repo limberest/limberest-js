@@ -34,7 +34,7 @@ export default {
     request: {
       type: Object,
       required: true
-    }
+    },
   },
   emits: [
     'updateRequest',
@@ -69,6 +69,6 @@ export default {
     submit() {
       this.$emit('submitRequest', this.request.name);
     }
-  }
+  },
 };
 </script>

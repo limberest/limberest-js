@@ -3,6 +3,7 @@
     <div
       v-for="request in requests"
       :key="request.name"
+      :ref="setRequestElement"
     >
       <request
         :request="request"
@@ -32,8 +33,12 @@ export default {
   data() {
     return {
       requests: [],
-      options: new Options(state ? state.base : '')
+      options: new Options(state ? state.base : ''),
+      requestElements: []
     };
+  },
+  beforeUpdate() {
+    this.requestElements = [];
   },
   mounted: function () {
     this.$nextTick(function () {
@@ -45,6 +50,11 @@ export default {
     window.removeEventListener('message', this.handleMessage);
   },
   methods: {
+    setRequestElement(el) {
+      if (el) {
+        this.requestElements.push(el.querySelector('.request'));
+      }
+    },
     handleMessage(event) {
       const message = event.data; // json message data from extension
       console.debug(`message: ${JSON.stringify(message, null, 2)}`);
@@ -91,11 +101,11 @@ export default {
         this.requests.push(newRequest);
       }
       this.update();
-      if (index === -1) {
-        this.$nextTick(function () {
-          window.scrollTo(0, document.body.scrollHeight);
-        });
-      }
+      this.$nextTick(function () {
+        location.hash = requestName;
+        const reqEl = this.requestElements.find(rel => rel.getAttribute('data-reqname') === requestName);
+        reqEl.querySelector('.request-name').focus();
+      });
     },
     onRename(requestName, newRequestName) {
       const request = this.requests.find(req => req.name === requestName);
