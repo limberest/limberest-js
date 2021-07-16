@@ -20,7 +20,7 @@ export enum Setting {
     cwd = 'cwd',
     env = 'env',
     useDist = 'useDist',
-    openFlowWhenRun = 'openFlowWhenRun',
+    openSuitesWhenRun = 'openSuitesWhenRun',
     saveBeforeRun = 'saveBeforeRun',
     websocketPort = 'websocketPort'
 }
@@ -112,8 +112,8 @@ export class PlyConfig {
         return this.getConfiguration().get(Setting.useDist, false);
     }
 
-    get openFlowWhenRun(): string {
-        return this.getConfiguration().get(Setting.openFlowWhenRun, 'If Single');
+    get openSuitesWhenRun(): string {
+        return this.getConfiguration().get(Setting.openSuitesWhenRun, 'If Single');
     }
 
     get saveBeforeRun(): boolean {

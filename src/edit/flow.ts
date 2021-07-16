@@ -26,8 +26,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
     constructor(
         private context: vscode.ExtensionContext,
         private adapterHelper: AdapterHelper,
-        private onFlowAction: (listener: flowbee.Listener<FlowActionEvent>) => flowbee.Disposable,
         private onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable,
+        private onFlowAction: (listener: flowbee.Listener<FlowActionEvent>) => flowbee.Disposable,
         private onFlowModeChange: (listener: flowbee.Listener<FlowModeChangeEvent>) => flowbee.Disposable
     ) {
         this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);

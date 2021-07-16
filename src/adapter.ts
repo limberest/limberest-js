@@ -197,25 +197,40 @@ export class PlyAdapter implements TestAdapter {
         }
     }
 
+    /**
+     * Check if save needed, and open file (for custom editors) in case run from Test Explorer.
+     * False value for 'proceed' indicates flow run came from Test Explorer, so trigger exec through editor
+     * and then return immediately since run is triggered separately.
+     */
     private async checkAndProceed(testIds: string[], runOptions?: ply.RunOptions & { proceed?: boolean }): Promise<boolean> {
         if (!(await this.promptToSaveDirtySuites(testIds))) {
             return false;
         }
 
-        if (this.config.openFlowWhenRun !== 'Never') {
-            const flowSuites: TestSuiteInfo[] = this.getFlowSuites(testIds);
-            if (flowSuites.length > 0) {
-                if (flowSuites.length === 1) {
-                    await vscode.commands.executeCommand('ply.open-flow', testIds[0]);
-                    if (!runOptions?.proceed) {
-                        // run through editor to prompt for values if needed
-                        vscode.commands.executeCommand('ply.flow-action', testIds[0], 'run');
-                        return false;
+        if (this.config.openSuitesWhenRun !== 'Never') {
+            const editableSuites: TestSuiteInfo[] = this.getEditableSuites(testIds);
+            if (editableSuites.length > 0) {
+                if (editableSuites.length === 1) {
+                    const path = PlyRoots.toUri(editableSuites[0].id).path;
+                    if (path.endsWith('.ply')) {
+                        await vscode.commands.executeCommand('ply.open-requests', testIds[0]);
+                    } else if (path.endsWith('.flow')) {
+                        await vscode.commands.executeCommand('ply.open-flow', testIds[0]);
+                        if (!runOptions?.proceed) {
+                            // run through editor to prompt for values if needed
+                            vscode.commands.executeCommand('ply.flow-action', testIds[0], 'run');
+                            return false;
+                        }
                     }
-                } else if (this.config.openFlowWhenRun === 'Always') {
-                    // you asked for it -- open all flows
-                    flowSuites.forEach(async flowSuite => {
-                        await vscode.commands.executeCommand('ply.open-flow', flowSuite.id);
+                } else if (this.config.openSuitesWhenRun === 'Always') {
+                    // you asked for it -- open all suites
+                    editableSuites.forEach(async edSuite => {
+                        const path = PlyRoots.toUri(editableSuites[0].id).path;
+                        if (path.endsWith('.ply')) {
+                            await vscode.commands.executeCommand('ply.open-requests', edSuite.id);
+                        } else if (path.endsWith('.flow')) {
+                            await vscode.commands.executeCommand('ply.open-flow', edSuite.id);
+                        }
                     });
                 }
             }
@@ -224,9 +239,13 @@ export class PlyAdapter implements TestAdapter {
         return true;
     }
 
-    private getFlowSuites(testIds: string[]): TestSuiteInfo[] {
+    /**
+     * Returns request and flow suites with custom editors
+     */
+    private getEditableSuites(testIds: string[]): TestSuiteInfo[] {
         return this.plyRoots.getSuiteFileInfos(testIds).filter(suiteFileInfo => {
-            return PlyRoots.toUri(suiteFileInfo.id).path.endsWith('.flow');
+            const uriPath = PlyRoots.toUri(suiteFileInfo.id).path;
+            return uriPath.endsWith('.ply') || uriPath.endsWith('.flow');
         });
     }
 

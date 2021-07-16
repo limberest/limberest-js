@@ -36,7 +36,7 @@ export class PlyItem {
 
     getFilters(type: ply.TestType): { [name: string]: string[] } | undefined {
         if (type === 'request') {
-            return { 'Ply Request': ['ply.yaml', 'ply.yml'] };
+            return { 'Ply Request': ['ply', 'ply.yaml', 'ply.yml'] };
         } else if (type === 'case') {
             return { 'Ply Case': ['ply.ts'] };
         } else if (type === 'flow') {
@@ -119,7 +119,9 @@ export class PlyItem {
     }
 
     async openItem(type: ply.TestType, uri: vscode.Uri) {
-        if (type === 'flow') {
+        if (type === 'request' && uri.fsPath.endsWith('.ply')) {
+            await vscode.commands.executeCommand('ply.open-requests', { uri });
+        } else if (type === 'flow') {
             await vscode.commands.executeCommand('ply.open-flow', { uri });
         } else {
             const doc = await vscode.workspace.openTextDocument(uri);
@@ -159,7 +161,7 @@ export class PlyItem {
                 openLabel: 'Select',
                 canSelectMany: false,
                 filters: {
-                    'Ply Requests/Cases/Flows': ['yaml', 'yml', 'ts', 'flow']
+                    'Ply Requests/Cases/Flows': ['ply', 'yaml', 'yml', 'ts', 'flow']
                 },
                 title: 'Select Ply suite'
             });

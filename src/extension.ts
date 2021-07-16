@@ -9,7 +9,7 @@ import { PlyRoots } from './plyRoots';
 import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
-import { RequestEditor, RequestActionEvent } from './edit/request';
+import { RequestEditor, RequestActionEvent, RequestItemSelectEvent } from './edit/request';
 import { FlowEditor, FlowActionEvent, FlowItemSelectEvent, FlowModeChangeEvent } from './edit/flow';
 import { Postman } from './postman';
 import { PlyItem } from './item';
@@ -47,6 +47,10 @@ export async function activate(context: vscode.ExtensionContext) {
     const onRequestAction = (listener: Listener<RequestActionEvent>): Disposable => {
         return _onRequestAction.on(listener);
     };
+    const _onRequestItemSelect = new Event<RequestItemSelectEvent>();
+    const onRequestItemSelect = (listener: Listener<RequestItemSelectEvent>): Disposable => {
+        return _onRequestItemSelect.on(listener);
+    };
 
     const _onFlowAction = new Event<FlowActionEvent>();
     const onFlowAction = (listener: Listener<FlowActionEvent>): Disposable => {
@@ -61,13 +65,41 @@ export async function activate(context: vscode.ExtensionContext) {
         return _onFlowModeChange.on(listener);
     };
 
-    const requestEditor = new RequestEditor(context, new AdapterHelper('requests', testAdapters), onRequestAction);
+    const requestEditor = new RequestEditor(context, new AdapterHelper('requests', testAdapters), onRequestItemSelect, onRequestAction);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.request.file', requestEditor));
     context.subscriptions.push(vscode.commands.registerCommand('ply.request.add-request', async (...args: any[]) => {
         _onRequestAction.emit({ uri: args[0], action: 'add' });
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.open-requests', async (...args: any[]) => {
+        const item = await PlyItem.getItem(...args);
+        if (item?.uri) {
+            const fileUri = vscode.Uri.file(item.uri.fsPath);
+            if (item.uri.fsPath.endsWith('.ply')) {
+                await vscode.commands.executeCommand('vscode.openWith', fileUri, 'ply.request.file');
+                if (item.uri.fragment) {
+                    _onRequestItemSelect.emit({ uri: item.uri });
+                }
+            } else {
+                const doc = await vscode.workspace.openTextDocument(fileUri);
+                vscode.window.showTextDocument(doc);
+            }
+            return fileUri;
+        }
+    }));
+    // register for ply-requests scheme (dummy provider to prevent test explorer from opening as text)
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ply-requests', {
+        provideTextDocumentContent() {
+            return '';
+        }
+    }));
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async editor => {
+        if (editor?.document.uri.scheme === 'ply-requests') {
+            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            vscode.commands.executeCommand('ply.open-requests', { uri: editor.document.uri.with({ scheme: 'file' }) });
+        }
+    }));
 
-    const flowEditor = new FlowEditor(context, new AdapterHelper('flows', testAdapters), onFlowAction, onFlowItemSelect, onFlowModeChange);
+    const flowEditor = new FlowEditor(context, new AdapterHelper('flows', testAdapters), onFlowItemSelect, onFlowAction, onFlowModeChange);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
     context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
         const item = await PlyItem.getItem(...args);
@@ -103,6 +135,16 @@ export async function activate(context: vscode.ExtensionContext) {
         if (editor?.document.uri.scheme === 'ply-flow') {
             await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
             vscode.commands.executeCommand('ply.open-flow', { uri: editor.document.uri.with({ scheme: 'file' })});
+        }
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('ply.open-cases', async (...args: any[]) => {
+        const item = await PlyItem.getItem(...args);
+        if (item?.uri) {
+            const fileUri = vscode.Uri.file(item.uri.fsPath);
+            const doc = await vscode.workspace.openTextDocument(fileUri);
+            vscode.window.showTextDocument(doc);
+            return fileUri;
         }
     }));
 
@@ -254,7 +296,9 @@ export async function activate(context: vscode.ExtensionContext) {
     if (toOpen) {
         context.workspaceState.update('ply.to.open', undefined);
         const uri = vscode.Uri.parse('' + toOpen);
-        if (uri.path.endsWith('.flow')) {
+        if (uri.path.endsWith('.ply')) {
+            vscode.commands.executeCommand('ply.open-requests', { uri });
+        } else if (uri.path.endsWith('.flow')) {
             vscode.commands.executeCommand('ply.open-flow', { uri });
         } else {
             const doc = await vscode.workspace.openTextDocument(uri);

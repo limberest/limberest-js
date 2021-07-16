@@ -76,8 +76,19 @@ export default {
           base: message.base,
           file: message.file,
           text,
-          readonly: message.readonly
+          readonly: message.readonly,
+          selected: message.select
         });
+        if (message.select) {
+          let id = message.select;
+          const dot = id.indexOf('.');
+          if (dot > 0) {
+            id = id.substring(dot + 1);
+          }
+          this.$nextTick(function () {
+            location.hash = id;
+          });
+        }
       } else if (message.type === 'action') {
         if (message.action === 'add') {
           this.addRequest();

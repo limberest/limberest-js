@@ -183,8 +183,8 @@
           "default": false,
           "scope": "resource"
         },
-        "ply.openFlowWhenRun": {
-          "description": "Automatically open flows for live view when executing from Test Explorer",
+        "ply.openSuitesWhenRun": {
+          "description": "Automatically open requests/flows in custom editor when executing from Test Explorer",
           "type": "string",
           "enum": [
             "If Single",
@@ -221,8 +221,24 @@
     },
     "commands": [
       {
+        "command": "ply.open-requests",
+        "title": "Ply: Open Request Suite",
+        "icon": {
+          "dark": "./icons/open-file-dark.svg",
+          "light": "./icons/open-file-light.svg"
+        }
+      },
+      {
         "command": "ply.open-flow",
         "title": "Ply: Open Flow",
+        "icon": {
+          "dark": "./icons/open-file-dark.svg",
+          "light": "./icons/open-file-light.svg"
+        }
+      },
+      {
+        "command": "ply.open-cases",
+        "title": "Ply: Open Case Suite",
         "icon": {
           "dark": "./icons/open-file-dark.svg",
           "light": "./icons/open-file-light.svg"

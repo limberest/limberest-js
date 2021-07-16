@@ -5,6 +5,7 @@ import { Listener, Disposable } from 'flowbee';
 import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
 
+export interface RequestItemSelectEvent { uri: vscode.Uri; }
 export interface RequestActionEvent { uri: vscode.Uri; action: string; }
 
 export class RequestEditor implements vscode.CustomTextEditorProvider {
@@ -14,6 +15,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
     constructor(
         private context: vscode.ExtensionContext,
         private adapterHelper: AdapterHelper,
+        private onRequestItemSelect: (listener: Listener<RequestItemSelectEvent>) => Disposable,
         private onRequestAction: (listener: Listener<RequestActionEvent>) => Disposable,
     ) {
     }
@@ -43,6 +45,10 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 text: document.getText(),
                 readonly: !isFile || (fs.statSync(document.uri.fsPath).mode & 146) === 0
             } as any;
+            if (select) {
+                msg.select = select;
+                select = null;
+            }
             webviewPanel.webview.postMessage(msg);
         };
 
@@ -151,6 +157,13 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 }
             }));
         }
+
+        let select: string | null = null;
+        this.disposables.push(this.onRequestItemSelect(requestItemSelect => {
+            if (requestItemSelect.uri.with({ fragment: '' }).toString() === document.uri.toString()) {
+                select = requestItemSelect.uri.fragment;
+            }
+        }));
 
         webviewPanel.onDidDispose(() => {
             for (const disposable of this.disposables) {

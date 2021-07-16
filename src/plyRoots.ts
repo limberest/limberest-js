@@ -53,9 +53,12 @@ export class PlyRoot {
                 line: testUris[i][1],
                 debuggable: testUri.path.endsWith('.ts') || testUri.path.endsWith('.flow')
             };
-            if (this.id === 'flows') {
+            if (this.id === 'requests' && testUri.path.endsWith('.ply') && testUri.scheme === 'file') {
+                // .ply files should not be opened in text editor
+                test.file = testUri.with({ scheme: 'ply-requests' }).toString(true);
+            } else if (this.id === 'flows' && testUri.scheme === 'file') {
                 // flows should not be opened in text editor
-                test.file = testUri.scheme === 'file' ? testUri.with({ scheme: 'ply-flow' }).toString(true) : testUri.toString(true);
+                test.file = testUri.with({ scheme: 'ply-flow' }).toString(true);
             } else {
                 test.file = testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true);
             }
@@ -82,10 +85,12 @@ export class PlyRoot {
                     line: 0,
                     children: []
                 };
-                if (this.id === 'flows') {
+                if (this.id === 'requests' && fileUri.path.endsWith('.ply') && fileUri.scheme === 'file') {
+                    // .ply files should not be opened in text editor
+                    suite.file = fileUri.with({ scheme: 'ply-requests' }).toString(true);
+                } else if (this.id === 'flows' && fileUri.scheme === 'file') {
                     // flows should not be opened in text editor
-                    suite.file = fileUri.scheme === 'file' ? fileUri.with({ scheme: 'ply-flow' }).toString(true) : fileUri.toString(true);
-
+                    suite.file = fileUri.with({ scheme: 'ply-flow' }).toString(true);
                 } else {
                     suite.file = fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true);
                 }
