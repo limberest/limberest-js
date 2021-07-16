@@ -102,15 +102,23 @@ export default {
       }
       this.update();
       this.$nextTick(function () {
-        location.hash = requestName;
-        const reqEl = this.requestElements.find(rel => rel.getAttribute('data-reqname') === requestName);
-        reqEl.querySelector('.request-name').focus();
+        this.focusRequestName(requestName);
       });
     },
-    onRename(requestName, newRequestName) {
-      const request = this.requests.find(req => req.name === requestName);
-      request.name = newRequestName;
-      this.onUpdate(request);
+    onRename(requestName, newRequestName, nameEl) {
+      const dup = this.requests.find(req => req.name === newRequestName);
+      if (dup) {
+        const file = vscode.getState().file;
+        vscode.postMessage({
+          type: 'alert',
+          message: { level: 'error', text: `Request '${newRequestName}' already exists in ${file}` }
+        });
+        nameEl.focus();
+      } else {
+        const request = this.requests.find(req => req.name === requestName);
+        request.name = newRequestName;
+        this.onUpdate(request);
+      }
     },
     onUpdate(updatedRequest) {
       this.requests[this.requests.findIndex(req => req.name === updatedRequest.name)] = updatedRequest;
@@ -132,6 +140,11 @@ export default {
       const text = this.toYaml();
       vscode.postMessage({ type: 'change', text });
       this.updateState({ text });
+    },
+    focusRequestName(requestName) {
+      location.hash = requestName;
+      const reqEl = this.requestElements.find(rel => rel.getAttribute('data-reqname') === requestName);
+      reqEl.querySelector('.request-name').focus();
     },
     fromYaml(text, file) {
       try {

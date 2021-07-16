@@ -100,7 +100,7 @@ export default {
     },
     onNameBlur() {
       if (this.rename !== this.request.name) {
-        this.$emit('renameRequest', this.request.name, this.rename);
+        this.$emit('renameRequest', this.request.name, this.rename, this.$el.querySelector('.request-name'));
       }
     },
     onUpdate(updatedRequest) {
