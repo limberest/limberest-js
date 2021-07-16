@@ -10,6 +10,16 @@
       :options="options"
       @click="onAction"
     />
+    <icon
+      file="submit.svg"
+      :options="options"
+      @click="onAction"
+    />
+    <icon
+      file="run.svg"
+      :options="options"
+      @click="onAction"
+    />
   </div>
 </template>
 

@@ -130,10 +130,10 @@ export default {
       } else if (action === 'delete') {
         this.requests.splice(this.requests.findIndex(req => req.name === requestName), 1);
         this.update();
-      } else if (action === 'submit') {
+      } else if (action === 'run' || action === 'submit') {
         const request = this.requests.find(req => req.name === requestName);
         // need to unwrap proxy for message via Object.assign() -- TODO: better way?
-        vscode.postMessage({ type: 'submit', request: JSON.parse(JSON.stringify(request)) });
+        vscode.postMessage({ type: 'action', action, request: JSON.parse(JSON.stringify(request)) });
       }
     },
     update() {
