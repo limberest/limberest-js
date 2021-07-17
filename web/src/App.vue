@@ -110,7 +110,7 @@ export default {
       if (dup) {
         vscode.postMessage({
           type: 'alert',
-          message: { level: 'error', text: `Request '${newRequestName}' already exists in ${this.options.file}` }
+          message: { level: 'error', text: `Request '${newRequestName}' already exists` }
         });
         nameEl.focus();
       } else {
