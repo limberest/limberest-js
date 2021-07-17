@@ -36,6 +36,6 @@ export default {
                 transform: (contents) => sass.renderSync({ data: contents.toString() }).css
             }]
         }),
-        serve('out')
+        serve()
     ]
 };
