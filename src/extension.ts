@@ -66,7 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
     };
 
     const requestEditor = new RequestEditor(context, new AdapterHelper('requests', testAdapters), onRequestItemSelect, onRequestAction);
-    context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.request.file', requestEditor));
+    context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.request.file', requestEditor, { webviewOptions: { retainContextWhenHidden: true } }));
     context.subscriptions.push(vscode.commands.registerCommand('ply.request.add-request', async (...args: any[]) => {
         _onRequestAction.emit({ uri: args[0], action: 'add' });
     }));

@@ -23,7 +23,6 @@ import { Options } from './model/options';
 
 /* eslint-disable-next-line */
 const vscode = acquireVsCodeApi();
-const state = vscode.getState();
 
 export default {
   name: 'App',
@@ -33,7 +32,7 @@ export default {
   data() {
     return {
       requests: [],
-      options: new Options(state ? state.base : ''),
+      options: new Options(''),
       requestElements: []
     };
   },
@@ -72,13 +71,6 @@ export default {
             return { name: reqName, ...reqs[reqName] };
           });
         }
-        this.updateState({
-          base: message.base,
-          file: message.file,
-          text,
-          readonly: message.readonly,
-          selected: message.select
-        });
         if (message.select) {
           let id = message.select;
           const dot = id.indexOf('.');
@@ -94,9 +86,6 @@ export default {
           this.addRequest();
         }
       }
-    },
-    updateState(delta) {
-      vscode.setState({ ...vscode.getState() || {}, ...delta });
     },
     addRequest(index = -1) {  // no index means append to end
       let requestName = 'New Request';
@@ -119,10 +108,9 @@ export default {
     onRename(requestName, newRequestName, nameEl) {
       const dup = this.requests.find(req => req.name === newRequestName);
       if (dup) {
-        const file = vscode.getState().file;
         vscode.postMessage({
           type: 'alert',
-          message: { level: 'error', text: `Request '${newRequestName}' already exists in ${file}` }
+          message: { level: 'error', text: `Request '${newRequestName}' already exists in ${this.options.file}` }
         });
         nameEl.focus();
       } else {
@@ -150,7 +138,6 @@ export default {
     update() {
       const text = this.toYaml();
       vscode.postMessage({ type: 'change', text });
-      this.updateState({ text });
     },
     focusRequestName(requestName) {
       location.hash = requestName;
