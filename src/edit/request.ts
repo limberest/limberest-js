@@ -36,6 +36,9 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         const web = new Web(baseUri, path.join(webPath, 'request.html'), webviewPanel.webview.cspSource);
         webviewPanel.webview.html = web.html;
 
+        // selected request
+        let select: string | null = null;
+
         const updateWebview = async () => {
             const isFile = document.uri.scheme === 'file';
             const msg = {
@@ -47,14 +50,14 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             } as any;
             if (select) {
                 msg.select = select;
-                select = null;
             }
             webviewPanel.webview.postMessage(msg);
         };
 
         this.disposables.push(webviewPanel.webview.onDidReceiveMessage(async message => {
             if (message.type === 'ready') {
-                updateWebview();
+                await updateWebview();
+                select = null;
             } else if (message.type === 'alert' || message.type === 'confirm') {
                 const options: vscode.MessageOptions = {};
                 const items: string[] = [];
@@ -104,7 +107,6 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         }));
 
         if (document.uri.scheme === 'file') {
-
             const onValuesUpdate = async (resultUri?: vscode.Uri) => {
                 const adapter = this.adapterHelper.getAdapter(document.uri);
                 if (adapter?.values) {
@@ -158,10 +160,10 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             }));
         }
 
-        let select: string | null = null;
         this.disposables.push(this.onRequestItemSelect(requestItemSelect => {
             if (requestItemSelect.uri.with({ fragment: '' }).toString() === document.uri.toString()) {
                 select = requestItemSelect.uri.fragment;
+                updateWebview();
             }
         }));
 
