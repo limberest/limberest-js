@@ -1,8 +1,7 @@
 <template>
-  <div style="display:flex;margin-left:100px;">
+  <div class="endpoint">
     <el-select
       v-model="method"
-      style="top:4px;width:135px;"
       @change="update('method', $event)"
     >
       <el-option
@@ -17,8 +16,8 @@
       @input="update('url', $event)"
     />
     <el-button
+      class="submit-btn"
       type="text"
-      style="margin-left:7px;"
       @click="submit"
     >
       Submit

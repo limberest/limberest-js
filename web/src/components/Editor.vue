@@ -49,10 +49,18 @@ export default {
         this.$el.style.height = '200px';
       }
       this.initMonaco();
+      this.resizeObserver = new ResizeObserver(() => {
+        this.editor.layout();
+      }).observe(this.$el);
     });
     window.addEventListener('message', this.handleMessage);
   },
   unmounted: function() {
+    if (this.resizeObserver) {
+      this.resizeObserver.unobserve(this.$el);
+      this.resizeObserver.disconnect();
+      this.resizeObserver = undefined;
+    }
     window.removeEventListener('message', this.handleMessage);
   },
   methods: {
@@ -66,8 +74,13 @@ export default {
         lineNumbers: false,
         lineDecorationsWidth: 0,
         lineNumbersMinChars: 0,
+        renderLineHighlight: 'none',
         glyphMargin: false,
         renderIndentGuides: false,
+        scrollbar: {
+          verticalScrollbarSize: 11,
+          horizontalSliderSize: 11
+        },
         minimap: {
           enabled: false
         }

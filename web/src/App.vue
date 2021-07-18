@@ -1,18 +1,21 @@
 <template>
-  <div>
-    <div
-      v-for="request in requests"
-      :key="request.name"
-      :ref="setRequestElement"
-    >
-      <request
-        :request="request"
-        :options="options"
-        @renameRequest="onRename"
-        @updateRequest="onUpdate"
-        @requestAction="onAction"
-      />
+  <div class="ply-container">
+    <div class="request-container">
+      <div
+        v-for="request in requests"
+        :key="request.name"
+        :ref="setRequestElement"
+      >
+        <request
+          :request="request"
+          :options="options"
+          @renameRequest="onRename"
+          @updateRequest="onUpdate"
+          @requestAction="onAction"
+        />
+      </div>
     </div>
+    <div class="response-container" />
   </div>
 </template>
 
