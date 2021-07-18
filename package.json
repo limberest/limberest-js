@@ -48,6 +48,7 @@
     "test": "TS_NODE_TRANSPILE_ONLY=1 mocha --require ts-node/register test/**/*.ts",
     "build-bundles": "rollup -c && cp node_modules/flowbee/dist/css/style.css media/css/flowbee.css ",
     "watch-bundles": "rollup --watch -c",
+    "build-web": "cd web && npm run build && cd ..",
     "vscode:prepublish": "npm install && npm run build && npm prune --production",
     "package": "vsce package"
   },
