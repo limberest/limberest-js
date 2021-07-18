@@ -84,6 +84,8 @@ export default {
             location.hash = id;
           });
         }
+      } else if (message.type === 'responses') {
+        console.log("RESPONSES: " + JSON.stringify(message.responses, null, 2));
       } else if (message.type === 'action') {
         if (message.action === 'add') {
           this.addRequest();

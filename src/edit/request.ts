@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { Listener, Disposable } from 'flowbee';
 import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
+import { Response } from 'ply-ct';
 
 export interface RequestItemSelectEvent { uri: vscode.Uri; }
 export interface RequestActionEvent { uri: vscode.Uri; action: string; }
@@ -39,7 +40,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         // selected request
         let select: string | null = null;
 
-        const updateWebview = async () => {
+        const updateRequests = async () => {
             const isFile = document.uri.scheme === 'file';
             const msg = {
                 type: 'update',
@@ -54,10 +55,19 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             webviewPanel.webview.postMessage(msg);
         };
 
+        const updateResponses = async(responses: { [key: string]: Response }) => {
+            webviewPanel.webview.postMessage({
+                type: 'responses',
+                responses,
+                select
+            });
+        };
+
         this.disposables.push(webviewPanel.webview.onDidReceiveMessage(async message => {
             if (message.type === 'ready') {
-                await updateWebview();
+                await updateRequests();
                 select = null;
+                updateResponses(this.getResponses(document.uri));
             } else if (message.type === 'alert' || message.type === 'confirm') {
                 const options: vscode.MessageOptions = {};
                 const items: string[] = [];
@@ -163,7 +173,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         this.disposables.push(this.onRequestItemSelect(requestItemSelect => {
             if (requestItemSelect.uri.with({ fragment: '' }).toString() === document.uri.toString()) {
                 select = requestItemSelect.uri.fragment;
-                updateWebview();
+                updateRequests();
             }
         }));
 
@@ -173,5 +183,19 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             }
             this.disposables = [];
         });
+    }
+
+    /**
+     * Response from actual results
+     */
+    getResponses(uri: vscode.Uri): { [key: string]: Response } {
+        const adapter = this.adapterHelper.getAdapter(uri);
+        const id = `requests|${uri.toString(true)}`;
+        const suite = adapter.plyRoots.getSuite(id);
+        if (suite) {
+            return suite.runtime.results.responsesFromActual();
+        } else {
+            throw new Error(`Request suite not found: ${id}`);
+        }
     }
 }

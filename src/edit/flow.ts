@@ -388,8 +388,10 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         updateWebview();
     }
 
+    /**
+     * Instance from results
+     */
     getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {
-        // instance from results
         const adapter = this.adapterHelper.getAdapter(uri);
         const id = `flows|${uri.toString(true)}`;
         const suite = adapter.plyRoots.getSuite(id);
