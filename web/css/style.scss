@@ -12,19 +12,20 @@ pre {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.ply-container {
+.split {
   display: flex;
 }
-.request-container {
+.pane {
   flex-basis: 50%;
 }
-.response-container {
-  flex-basis: 50%;
+.pane-left {
+  flex-grow: 1;
+}
+.pane-right {
   border-left: 1px solid var(--vscode-panel-border);
 }
 
 .request {
-  padding-bottom: 20px;
   margin-bottom: 5px;
   border-bottom: 1px solid var(--vscode-panel-border);
 }

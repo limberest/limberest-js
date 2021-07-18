@@ -1,6 +1,6 @@
 <template>
-  <div class="ply-container">
-    <div class="request-container">
+  <split>
+    <pane>
       <div
         v-for="request in requests"
         :key="request.name"
@@ -14,13 +14,15 @@
           @requestAction="onAction"
         />
       </div>
-    </div>
-    <div class="response-container" />
-  </div>
+    </pane>
+    <pane :is-right="true" />
+  </split>
 </template>
 
 <script>
 import * as jsYaml from 'js-yaml';
+import Split from './components/Split.vue';
+import Pane from './components/Pane.vue';
 import Request from './components/Request.vue';
 import { Options } from './model/options';
 
@@ -29,9 +31,7 @@ const vscode = acquireVsCodeApi();
 
 export default {
   name: 'App',
-  components: {
-    Request
-  },
+  components: { Split, Pane, Request },
   data() {
     return {
       requests: [],
